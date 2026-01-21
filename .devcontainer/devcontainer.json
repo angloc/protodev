@@ -1,0 +1,96 @@
+{
+  "name": "Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+
+  // Features
+  "features": {
+    // Docker-in-Docker for container operations
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "installDockerBuildx": true,
+      "installDockerComposeSwitch": true
+    }
+  },
+
+  // VS Code Extensions
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Python
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        // Jupyter
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        // JavaScript/TypeScript
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "oven.bun-vscode",
+        // Docker & DevOps
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions",
+        // Git
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        // General productivity
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker",
+        "gruntfuggly.todo-tree",
+        "redhat.vscode-yaml",
+        // GitHub Copilot (if available)
+        "github.copilot",
+        "github.copilot-chat"
+      ],
+      "settings": {
+        // Python
+        "python.defaultInterpreterPath": "/root/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+          }
+        },
+        // JavaScript/TypeScript
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        // Terminal
+        "terminal.integrated.defaultProfile.linux": "bash",
+        // Editor
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      }
+    }
+  },
+
+  // Environment variables
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin"
+  },
+
+  // Post-create commands
+  "postCreateCommand": "echo '✅ Dev container ready! Tools: Python 3.12 (uv), Node 22, Bun, pnpm, Docker'",
+
+  // Run as root (or change to vscode user if preferred)
+  "remoteUser": "root"
+}
