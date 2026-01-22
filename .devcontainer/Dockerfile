@@ -111,24 +111,20 @@ ENV PATH="$BUN_INSTALL/bin:$PATH"
 RUN npm install -g pnpm
 
 # ============================================
-# Python packages via uv
+# Python packages via uv (targeting Python 3.12)
 # ============================================
-RUN uv pip install --system \
-    # Scientific computing
+RUN uv pip install --python 3.12 \
     numpy \
     scipy \
     matplotlib \
     pandas \
-    # Jupyter
     jupyter \
     jupyterlab \
     jupyter-ai \
     ipykernel \
-    # Development tools
     ruff \
     pytest \
     pytest-cov \
-    # OpenAI Codex CLI
     openai
 
 # ============================================
