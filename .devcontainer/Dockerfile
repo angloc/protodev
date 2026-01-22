@@ -79,22 +79,15 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 RUN curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b /usr/local/bin
 
 # ============================================
-# Python 3.12 via deadsnakes (if not available) or use pyenv
-# Using uv to manage Python
+# Python 3.12 via uv
 # ============================================
 
-# Install uv - Fast Python package manager
-ENV UV_INSTALL_DIR="/usr/local"
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv and Python 3.12 in same layer (ensures uv is available)
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local sh \
+    && /usr/local/bin/uv python install 3.12
 
-# Add uv to PATH
-ENV PATH="/usr/local/bin:$PATH"
-
-# Install Python 3.12 via uv
-RUN uv python install 3.12
-
-# Set Python 3.12 as default
-ENV PATH="/root/.local/share/uv/python/cpython-3.12.*/bin:$PATH"
+# Add uv and Python to PATH
+ENV PATH="/usr/local/bin:/root/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin:$PATH"
 
 # ============================================
 # Node.js 22 LTS
