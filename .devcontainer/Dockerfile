@@ -82,12 +82,14 @@ RUN curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | 
 # Python 3.12 via uv
 # ============================================
 
-# Install uv and Python 3.12 in same layer (ensures uv is available)
-RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local sh \
+# Download uv binary directly and install Python 3.12
+RUN curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz \
+    | tar xz -C /usr/local/bin --strip-components=1 \
+    && chmod +x /usr/local/bin/uv /usr/local/bin/uvx \
     && /usr/local/bin/uv python install 3.12
 
-# Add uv and Python to PATH
-ENV PATH="/usr/local/bin:/root/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin:$PATH"
+# Add Python to PATH
+ENV PATH="/root/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin:$PATH"
 
 # ============================================
 # Node.js 22 LTS
