@@ -113,7 +113,7 @@ RUN npm install -g pnpm
 # ============================================
 # Python packages via uv (targeting Python 3.12)
 # ============================================
-RUN uv pip install --python 3.12 \
+RUN uv pip install --python 3.12 --system --break-system-packages \
     numpy \
     scipy \
     matplotlib \
