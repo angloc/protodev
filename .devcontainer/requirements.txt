@@ -1,0 +1,27 @@
+# Python dependencies for the development environment
+# These are installed by postCreateCommand.sh at runtime
+#
+# Note: Core scientific packages (numpy, scipy, pandas, matplotlib, jupyter)
+# are already installed in the Dockerfile for faster container startup
+
+# Additional development tools
+ruff
+pytest
+pytest-cov
+
+# Web/API
+requests
+httpx
+
+# Data formats
+PyYAML
+Jinja2
+
+# AI/ML
+openai
+jupyter-ai
+
+# Add project-specific dependencies below:
+# kubernetes
+# boto3
+# etc.
