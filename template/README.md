@@ -134,27 +134,38 @@ Edit `.devcontainer/devcontainer.json`:
 }
 ```
 
-### SSH Keys Configuration
+### Git Authentication
 
-**For Windows users** (default):
-SSH keys are mounted from `%USERPROFILE%\.ssh`
+VS Code Dev Containers **automatically forwards your Git credentials** to the container. No manual configuration is needed for most users.
 
-**For Linux/Mac users**:
-Edit `.devcontainer/devcontainer.json` and `.devcontainer/docker-compose.yml`:
+#### HTTPS (Recommended)
+If you use HTTPS URLs for Git remotes (e.g., `https://github.com/user/repo.git`):
+- VS Code automatically forwards credentials from Git Credential Manager
+- Works on Windows, macOS, and Linux
+- No additional setup required
 
-```json
-// devcontainer.json
-"mounts": [
-    // "type=bind,source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
-    "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
-]
-```
+#### SSH
+If you prefer SSH URLs for Git remotes (e.g., `git@github.com:user/repo.git`):
+- VS Code forwards your local SSH agent automatically
+- Ensure your SSH agent is running and keys are loaded:
+  ```bash
+  # Check if agent is running
+  ssh-add -l
+  
+  # Add your key if needed
+  ssh-add ~/.ssh/id_ed25519
+  ```
+- **Windows**: Enable the OpenSSH Authentication Agent service
+- **macOS/Linux**: The agent typically runs automatically
 
-```yaml
-# docker-compose.yml
-volumes:
-  # - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
-  - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
+#### Verify Authentication
+Inside the container, test your Git access:
+```bash
+# For HTTPS
+git ls-remote https://github.com/your-username/your-repo.git
+
+# For SSH
+ssh -T git@github.com
 ```
 
 ### AI Coding Assistants

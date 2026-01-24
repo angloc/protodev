@@ -5,7 +5,6 @@
 # This script runs when the container starts and configures the environment
 # for development. It handles:
 # - Git configuration
-# - SSH key setup
 # - Docker socket permissions
 # - Project-specific dependencies (requirements.txt, package.json)
 # - Optional AI coding assistant installation
@@ -26,27 +25,12 @@ git config --global core.autocrlf input
 echo "✅ Git configured"
 
 # ============================================
-# SSH Key Setup
+# Git Authentication
 # ============================================
-# Copy ssh credentials from read-only mount to mutable location
-if [ -d /home/vscode/.ssh-readonly ]; then
-    echo "Setting up SSH keys..."
-    sudo mkdir -p ~/.ssh
-    sudo cp -r ~/.ssh-readonly/* ~/.ssh/ 2>/dev/null || true
-    sudo chmod 700 ~/.ssh
-    sudo find ~/.ssh -type f ! -name "*.pub" \
-                ! -name "config" \
-                ! -name "known_hosts*" \
-                -exec chmod 600 {} \; 2>/dev/null || true
-    sudo find ~/.ssh -type f \( -name "*.pub" \
-                        -o -name "config" \
-                        -o -name "known_hosts*" \) \
-                -exec chmod 644 {} \; 2>/dev/null || true
-    sudo chown -R vscode ~/.ssh
-    echo "✅ SSH keys configured"
-else
-    echo "⚠️  No SSH keys found at /home/vscode/.ssh-readonly"
-fi
+# VS Code automatically forwards Git credentials (HTTPS) and SSH agent.
+# No manual SSH key setup required for most users.
+# See README.md for more details on Git authentication options.
+echo "✅ Git authentication: using VS Code's automatic credential forwarding"
 
 # ============================================
 # Docker Socket Permissions
