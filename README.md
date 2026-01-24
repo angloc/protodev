@@ -10,7 +10,7 @@ The container image is downloaded once and cached locally, then can be used acro
 
 Download `devcontainer.zip` from the [latest release](https://github.com/angloc/protodev/releases/latest) and extract it to your project root.
 
-Or use curl:
+**Linux/Mac/Git Bash:**
 
 ```bash
 # Download and extract to current directory
@@ -18,6 +18,17 @@ curl -L https://github.com/angloc/protodev/releases/latest/download/devcontainer
 unzip devcontainer.zip
 rm devcontainer.zip
 ```
+
+**Windows (PowerShell):**
+
+```powershell
+# Download and extract to current directory
+Invoke-WebRequest -Uri https://github.com/angloc/protodev/releases/latest/download/devcontainer.zip -OutFile devcontainer.zip
+Expand-Archive -Path devcontainer.zip -DestinationPath .
+Remove-Item devcontainer.zip
+```
+
+> **Tip:** On Windows, if you use [Git Bash](https://git-scm.com/downloads) or run VS Code in [WSL](https://learn.microsoft.com/en-us/windows/wsl/), you can use the Linux/bash commands above. Opening VS Code in WSL gives you the same experience as running on a native Linux distribution.
 
 ### Step 2: Open in VS Code
 
