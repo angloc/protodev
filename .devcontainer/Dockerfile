@@ -35,6 +35,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     jq \
     supervisor \
+    xmlstarlet \
+    # Database CLIs
+    sqlite3 \
     # Python build dependencies (for compiled packages)
     libffi-dev \
     libssl-dev \
@@ -53,6 +56,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libpng-dev \
     pkg-config \
+    # Media processing
+    ffmpeg \
+    graphicsmagick \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
@@ -136,6 +142,14 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 RUN curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b /usr/local/bin
 
 # ============================================
+# DuckDB CLI - Analytical SQL database
+# ============================================
+RUN curl -fsSL https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-linux-amd64.zip -o /tmp/duckdb.zip \
+    && unzip /tmp/duckdb.zip -d /usr/local/bin \
+    && chmod +x /usr/local/bin/duckdb \
+    && rm /tmp/duckdb.zip
+
+# ============================================
 # Python 3.12 via uv
 # ============================================
 RUN curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz \
@@ -180,10 +194,19 @@ RUN uv pip install --python 3.12 --system --break-system-packages \
     ruff \
     pytest \
     pytest-cov \
+    pytest-playwright \
+    playwright \
     openai \
     PyYAML \
     Jinja2 \
     requests
+
+# ============================================
+# Playwright browser setup (use existing Chrome)
+# ============================================
+# Set Playwright to use the system Chrome instead of downloading browsers
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # ============================================
 # Configure fzf for bash
@@ -206,7 +229,6 @@ xsetroot -cursor_name left_ptr
 # Start D-Bus session for apps requiring it (like Chrome)
 exec dbus-launch --exit-with-session fluxbox
 EOF
-
 RUN chmod +x /home/vscode/.vnc/xstartup
 
 # Create Fluxbox menu with development apps

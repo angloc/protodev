@@ -8,6 +8,8 @@
 ruff
 pytest
 pytest-cov
+pytest-playwright
+playwright
 
 # Web/API
 requests

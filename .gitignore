@@ -173,6 +173,14 @@ data/
 # *.npz
 
 # ===========================================
+# MCP Servers
+# ===========================================
+# Build outputs (source is committed, builds happen in container)
+.mcp-servers/*/build/
+.mcp-servers/*/node_modules/
+.mcp-servers/*/*.tsbuildinfo
+
+# ===========================================
 # Misc
 # ===========================================
 *.bak

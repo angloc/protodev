@@ -91,6 +91,91 @@ fi
 # ============================================
 export PYTHONDONTWRITEBYTECODE=1
 
+# ============================================
+# MCP Servers (Model Context Protocol)
+# ============================================
+# Build MCP servers for use with Cline and other MCP-compatible tools
+if [ -d ./.mcp-servers ]; then
+    echo "Building MCP servers..."
+    for server_dir in ./.mcp-servers/*/; do
+        if [ -f "${server_dir}package.json" ]; then
+            server_name=$(basename "$server_dir")
+            echo "  Building MCP server: $server_name"
+            (cd "$server_dir" && npm install --silent && npm run build --silent 2>/dev/null || true)
+        fi
+    done
+    echo "✅ MCP servers built"
+else
+    echo "⚠️  No .mcp-servers directory found"
+fi
+
+# ============================================
+# AI Coding Assistants (Optional)
+# ============================================
+# Uncomment the tool(s) you want to use. Each requires appropriate API keys.
+# See documentation for each tool for setup instructions.
+
+# --------------------------------------------
+# Google Antigravity
+# A browser-based AI coding assistant from Google
+# Requires: Google account authentication
+# Usage: antigravity --no-sandbox --disable-gpu
+# --------------------------------------------
+# echo "Installing Google Antigravity..."
+# sudo mkdir -p /etc/apt/keyrings
+# curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/antigravity-repo-key.gpg
+# echo "deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ antigravity-debian main" | sudo tee /etc/apt/sources.list.d/antigravity.list > /dev/null
+# sudo apt-get update && sudo apt-get install -y antigravity
+# echo "✅ Antigravity installed. Run via VNC: antigravity --no-sandbox --disable-gpu"
+
+# --------------------------------------------
+# Claude Code (Anthropic)
+# Terminal-based AI coding assistant from Anthropic
+# Requires: ANTHROPIC_API_KEY environment variable
+# Docs: https://docs.anthropic.com/en/docs/claude-code
+# Usage: claude
+# --------------------------------------------
+# echo "Installing Claude Code..."
+# npm install -g @anthropic-ai/claude-code
+# echo "✅ Claude Code installed. Set ANTHROPIC_API_KEY and run: claude"
+
+# --------------------------------------------
+# OpenAI Codex CLI (codex)
+# Terminal-based AI coding assistant from OpenAI
+# Requires: OPENAI_API_KEY environment variable
+# Docs: https://github.com/openai/codex
+# Usage: codex
+# --------------------------------------------
+# echo "Installing OpenAI Codex CLI..."
+# npm install -g @openai/codex
+# echo "✅ Codex installed. Set OPENAI_API_KEY and run: codex"
+
+# --------------------------------------------
+# Open Code
+# Open-source AI coding assistant
+# Requires: API key for your chosen provider (OpenAI, Anthropic, etc.)
+# Docs: https://github.com/opencode-ai/opencode
+# Usage: opencode
+# --------------------------------------------
+# echo "Installing Open Code..."
+# uv pip install --system opencode-ai
+# echo "✅ Open Code installed. Configure your API key and run: opencode"
+
+# --------------------------------------------
+# Google Conductor
+# AI-powered build and development system from Google
+# Requires: Google Cloud authentication
+# Docs: https://cloud.google.com/conductor
+# Usage: conductor
+# --------------------------------------------
+# echo "Installing Google Conductor..."
+# curl -fsSL https://dl.google.com/conductor/install.sh | bash
+# echo "✅ Conductor installed. Authenticate with gcloud and run: conductor"
+
+echo "Installing Cline CLI..."
+npm install -g cline
+echo "✅ Cline CLI installed. Run: cline"
+
 echo ""
 echo "✅ Development environment ready!"
 echo ""

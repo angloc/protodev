@@ -213,12 +213,114 @@ Or from the VNC desktop, right-click and select "Google Chrome" from the menu.
 | 5901 | VNC server |
 | 8888 | JupyterLab |
 
+## MCP Servers (Model Context Protocol)
+
+The dev container supports MCP servers, allowing AI assistants like Cline to use custom tools that run inside the container with access to Docker-in-Docker, Python, Node.js, and other container tools.
+
+### Directory Structure
+
+```
+.mcp-servers/
+├── README.md           # Documentation
+├── cline-config.json   # MCP server configuration for Cline
+└── example-server/     # Example server template
+    ├── package.json
+    ├── tsconfig.json
+    └── src/
+        └── index.ts
+```
+
+### How It Works
+
+1. **MCP servers are built automatically** during container startup (`postCreateCommand.sh`)
+2. **Servers run inside the container** - they have access to all container tools
+3. **Cline connects via stdio** - standard MCP communication protocol
+
+### Using MCP Servers with Cline
+
+When VS Code is connected to the dev container (via "Reopen in Container" or "Attach to Running Container"), you can configure Cline to use the container-based MCP servers.
+
+**Option A: Symlink the config (Recommended)**
+
+Create a symlink from your Cline settings to the workspace config:
+
+**Windows (PowerShell as Admin):**
+```powershell
+$clineDir = "$env:APPDATA\Code\User\globalStorage\saoudrizwan.claude-dev\settings"
+$workspaceConfig = "C:\path\to\protodev\.mcp-servers\cline-config.json"
+New-Item -ItemType SymbolicLink -Path "$clineDir\cline_mcp_settings.json" -Target $workspaceConfig -Force
+```
+
+**Linux/Mac:**
+```bash
+ln -sf /path/to/protodev/.mcp-servers/cline-config.json \
+    ~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json
+```
+
+**Option B: Copy the config**
+
+Manually copy `.mcp-servers/cline-config.json` to your Cline settings directory.
+
+### Creating New MCP Servers
+
+Inside the container:
+
+```bash
+# Option 1: Use the MCP template generator
+cd /workspace/.mcp-servers
+npx @modelcontextprotocol/create-server my-server
+cd my-server && npm install && npm run build
+
+# Option 2: Copy the example server
+cp -r example-server my-server
+cd my-server && npm install && npm run build
+```
+
+Then add your server to `.mcp-servers/cline-config.json`:
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "disabled": false,
+      "autoApprove": [],
+      "command": "node",
+      "args": ["/workspace/.mcp-servers/my-server/build/index.js"],
+      "env": {}
+    }
+  }
+}
+```
+
+### Example Server Tools
+
+The included example server provides these tools:
+
+| Tool | Description |
+|------|-------------|
+| `docker_ps` | List running Docker containers (Docker-in-Docker) |
+| `run_python` | Execute Python code in the container |
+| `list_projects` | List projects in /workspace/projects |
+| `check_tool` | Check if a tool is available in the container |
+
+And these resources:
+
+| Resource | Description |
+|----------|-------------|
+| `container://info` | Container environment information |
+| `workspace://structure` | Workspace directory structure |
+
 ## Installed Tools
 
+When starting a terminal in our development container you will have a Linux bash shell
+enhanced by all the tools here. Note Python should be run using uv.
+
 ### Languages & Runtimes
-- **Python 3.12** via uv (with numpy, scipy, pandas, matplotlib, jupyter)
+- **Python 3.12** via uv (with numpy, scipy, pandas, matplotlib, jupyter, pytest, playwright)
 - **Node.js 22** via NodeSource
 - **Bun** (latest)
+- **DuckDB** command line
+- **SQLite** command line
 
 ### Package Managers
 - **uv / uvx** - Fast Python package manager
@@ -234,6 +336,12 @@ Or from the VNC desktop, right-click and select "Google Chrome" from the menu.
 - **rg** (ripgrep) - Fast recursive grep
 - **yq** - YAML processor
 - **jq** - JSON processor
+- **XMLStarlet** - XML/XSLT/XPath processor
+- **FFMPEG** - Video processing
+- **GraphicsMagick** - Image processing
+
+This is a very powerful toolset and always consider applying one of these before generating
+a custom script.
 
 ### Container Tools
 - **Docker CE** with Docker Compose
