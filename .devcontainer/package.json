@@ -1,0 +1,12 @@
+{
+  "name": "devenv-tools",
+  "version": "1.0.0",
+  "description": "Shared NPM tools for the development environment",
+  "private": true,
+  "scripts": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.0"
+  }
+}

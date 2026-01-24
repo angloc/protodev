@@ -1,0 +1,172 @@
+# docker-compose.yml for development environment
+# Replicates the .devcontainer configuration for standalone use
+#
+# IMPORTANT: This file mirrors .devcontainer/devcontainer.json
+# Any changes to mounts, ports, or configuration should be synchronized between:
+# - This docker-compose.yml
+# - .devcontainer/devcontainer.json
+# - .devcontainer/Dockerfile
+# - .devcontainer/postCreateCommand.sh
+
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: protodev
+
+    # Mount the project directory
+    volumes:
+      # Project files
+      - ..:/workspace
+
+      # SSH keys (read-only mount from host)
+      # For Linux/Mac users, uncomment this line and comment the Windows line:
+      # - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
+      # For Windows users:
+      - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+
+      # Docker-in-Docker volume
+      - docker-dind-data:/var/lib/docker
+
+    # Port mappings
+    ports:
+      - "8080:8080"   # Application server
+      - "6080:6080"   # noVNC web interface
+      - "5901:5901"   # VNC server
+
+    # Working directory
+    working_dir: /workspace
+
+    # Docker-in-Docker requires privileged mode
+    privileged: true
+    init: true
+    # Increase shared memory to prevent Chrome crashes
+    shm_size: '2gb'
+    security_opt:
+      - seccomp:unconfined
+
+    # Run postCreateCommand.sh on startup, then start Docker daemon as main process
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        # Run the postCreateCommand script if it exists
+        if [ -f ./.devcontainer/postCreateCommand.sh ]; then
+          echo "Running postCreateCommand.sh..."
+          chmod +x ./.devcontainer/postCreateCommand.sh 2>/dev/null || true
+          bash ./.devcontainer/postCreateCommand.sh
+        fi
+
+        # Start VNC server
+        # Cleanup pre-existing locks to ensure clean start
+        vncserver -kill :1 2>/dev/null || true
+        rm -rf /tmp/.X11-unix/X1 /tmp/.X1-lock 2>/dev/null || true
+
+        sudo chown -R vscode:vscode /home/vscode/.vnc
+        mkdir -p /home/vscode/.vnc
+        # Create new config dir to prevent migration failure
+        mkdir -p /home/vscode/.config/tigervnc
+        sudo chown -R vscode:vscode /home/vscode/.config
+
+        echo "vscode" | vncpasswd -f > /home/vscode/.vnc/passwd
+        chmod 600 /home/vscode/.vnc/passwd
+
+        # Copy config files to new location to satisfy TigerVNC
+        cp /home/vscode/.vnc/passwd /home/vscode/.config/tigervnc/passwd || true
+        cp /home/vscode/.vnc/xstartup /home/vscode/.config/tigervnc/xstartup || true
+        chmod 600 /home/vscode/.config/tigervnc/passwd || true
+        chmod 755 /home/vscode/.config/tigervnc/xstartup || true
+
+        # Start VNC with localhost no to avoid IPv4/IPv6 binding issues
+        echo "Starting VNC server..."
+        vncserver :1 -geometry 1920x1080 -depth 24 -localhost no -rfbauth /home/vscode/.vnc/passwd
+
+        # Debug VNC startup
+        sleep 1
+        echo "VNC Status:"
+        vncserver -list
+        if [ -f /home/vscode/.vnc/*:1.log ]; then cat /home/vscode/.vnc/*:1.log; fi
+
+        # Start noVNC
+        # Set up default index page for nicer experience
+        if [ -d /usr/local/novnc ] && [ ! -f /usr/local/novnc/index.html ]; then
+            sudo ln -s vnc.html /usr/local/novnc/index.html
+        fi
+
+        echo "Starting noVNC..."
+        if [ -f /usr/local/novnc/utils/novnc_proxy ]; then
+            /usr/local/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
+        elif [ -f /usr/local/novnc/utils/launch.sh ]; then
+            /usr/local/novnc/utils/launch.sh --vnc localhost:5901 --listen 6080 &
+        else
+            echo "noVNC proxy script not found!"
+        fi
+
+        # Start Docker daemon as the main process (foreground)
+        echo "Starting Docker daemon as main process..."
+        exec sudo dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
+
+    # Environment variables
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DISPLAY=:1
+
+    # Ensure proper permissions for Docker socket
+    user: vscode
+    group_add:
+      - docker
+
+  jupyter:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: protodev-jupyter
+
+    # Mount the project directory
+    volumes:
+      # Project files
+      - ..:/workspace
+
+      # SSH keys (read-only mount from host)
+      # For Linux/Mac users, uncomment this line and comment the Windows line:
+      # - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
+      # For Windows users:
+      - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+
+    ports:
+      - "8888:8888"
+
+    working_dir: /workspace
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        if [ -f ./.devcontainer/postCreateCommand.sh ]; then
+          echo "Running postCreateCommand.sh..."
+          chmod +x ./.devcontainer/postCreateCommand.sh 2>/dev/null || true
+          bash ./.devcontainer/postCreateCommand.sh
+        fi
+
+        echo "Starting JupyterLab..."
+        mkdir -p /workspace/projects
+        jupyter lab --notebook-dir=/workspace/projects --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DOCKER_HOST=tcp://dev:2375
+
+    user: vscode
+    group_add:
+      - docker
+
+    depends_on:
+      - dev
+
+# Docker-in-Docker volume
+volumes:
+  docker-dind-data:

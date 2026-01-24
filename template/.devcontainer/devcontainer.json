@@ -12,6 +12,17 @@
     }
   },
 
+  // Mount SSH keys (read-only) for git operations
+  // For Windows users:
+  "mounts": [
+    "type=bind,source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
+    // For Linux/Mac users, comment the above line and uncomment this:
+    // "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
+  ],
+
+  // Forward ports for VNC, noVNC, and applications
+  "forwardPorts": [8080, 6080, 5901, 8888],
+
   // VS Code Extensions
   "customizations": {
     "vscode": {
@@ -45,7 +56,8 @@
       ],
       "settings": {
         // Python
-        "python.defaultInterpreterPath": "/root/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
+        "python.defaultInterpreterPath": "/home/vscode/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
+        "python.terminal.activateEnvironment": true,
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff",
           "editor.formatOnSave": true,
@@ -63,6 +75,11 @@
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.formatOnSave": true
         },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        // Terminal
+        "terminal.integrated.defaultProfile.linux": "bash",
         // Editor
         "editor.tabSize": 2,
         "editor.insertSpaces": true,
@@ -74,9 +91,22 @@
 
   // Environment variables
   "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin"
+    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin",
+    "DISPLAY": ":1"
   },
 
-  // Run as root
-  "remoteUser": "root"
+  // Post-create commands - run setup script
+  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+
+  // Run as vscode user (non-root for better security)
+  "remoteUser": "vscode",
+
+  // Container settings for Docker-in-Docker and Chrome
+  "runArgs": [
+    "--privileged",
+    "--shm-size=2g"
+  ],
+  "containerEnv": {
+    "DISPLAY": ":1"
+  }
 }

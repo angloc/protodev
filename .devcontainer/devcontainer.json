@@ -2,20 +2,21 @@
   "name": "Dev Environment",
   "build": {
     "dockerfile": "Dockerfile",
-    "context": "."
+    "context": ".."
   },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 
-  // Features
-  "features": {
-    // Docker-in-Docker for container operations
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "moby": true,
-      "installDockerBuildx": true,
-      "installDockerComposeSwitch": true
-    }
-  },
+  // Mount SSH keys (read-only) for git operations
+  // For Windows users:
+  "mounts": [
+    "type=bind,source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
+    // For Linux/Mac users, comment the above line and uncomment this:
+    // "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
+  ],
+
+  // Forward ports for VNC, noVNC, and applications
+  "forwardPorts": [8080, 6080, 5901, 8888],
 
   // VS Code Extensions
   "customizations": {
@@ -50,7 +51,7 @@
       ],
       "settings": {
         // Python
-        "python.defaultInterpreterPath": "/root/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
+        "python.defaultInterpreterPath": "/home/vscode/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
         "python.terminal.activateEnvironment": true,
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff",
@@ -85,12 +86,22 @@
 
   // Environment variables
   "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin"
+    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin",
+    "DISPLAY": ":1"
   },
 
-  // Post-create commands
-  "postCreateCommand": "echo '✅ Dev container ready! Tools: Python 3.12 (uv), Node 22, Bun, pnpm, Docker'",
+  // Post-create commands - run setup script
+  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
 
-  // Run as root (or change to vscode user if preferred)
-  "remoteUser": "root"
+  // Run as vscode user (non-root for better security)
+  "remoteUser": "vscode",
+
+  // Container settings for Docker-in-Docker and Chrome
+  "runArgs": [
+    "--privileged",
+    "--shm-size=2g"
+  ],
+  "containerEnv": {
+    "DISPLAY": ":1"
+  }
 }

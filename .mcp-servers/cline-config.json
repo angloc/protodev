@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "example-server": {
+      "disabled": false,
+      "autoApprove": [],
+      "command": "node",
+      "args": ["/workspace/.mcp-servers/example-server/build/index.js"],
+      "env": {}
+    }
+  }
+}
