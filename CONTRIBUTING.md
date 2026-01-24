@@ -177,6 +177,7 @@ When updating the container image, also update the distribution template:
 3. **template/.devcontainer/postCreateCommand.sh**: Keep in sync with main version (Cline install commented out)
 4. **template/Makefile**: Update if new commands are needed
 5. **template/README.md**: Update documentation
+6. **template/AGENTS.md**: Update documentation and usage guidance
 
 **Note:** The `.mcp-servers/` directory is included directly from the repository root in the release zip (not duplicated in templates/). Updates to MCP servers only need to be made once in the root `.mcp-servers/` directory.
 

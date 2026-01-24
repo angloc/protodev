@@ -76,7 +76,7 @@ jobs:
       - name: Create devcontainer.zip
         run: |
           cd template
-          zip -r ../devcontainer.zip .devcontainer Makefile README.md
+          zip -r ../devcontainer.zip .devcontainer Makefile README.md AGENTS.md
           cd ..
           # Add MCP servers from root directory
           zip -r devcontainer.zip .mcp-servers
