@@ -75,9 +75,9 @@ jobs:
       # Create devcontainer.zip template for users
       - name: Create devcontainer.zip
         run: |
-          cd templates/devcontainer
-          zip -r ../../devcontainer.zip .devcontainer Makefile README.md
-          cd ../..
+          cd template
+          zip -r ../devcontainer.zip .devcontainer Makefile README.md
+          cd ..
           # Add MCP servers from root directory
           zip -r devcontainer.zip .mcp-servers
           echo "Created devcontainer.zip with contents:"

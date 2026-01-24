@@ -13,7 +13,7 @@ protodev/
 │   ├── postCreateCommand.sh # Runtime setup script
 │   ├── requirements.txt     # Python dependencies
 │   └── package.json         # Node.js dependencies
-├── templates/devcontainer/  # Distribution template for users
+├── template/                # Distribution template for users
 │   ├── .devcontainer/       # Pre-built image configuration
 │   ├── Makefile             # Convenience commands
 │   └── README.md            # User documentation
@@ -172,11 +172,11 @@ Add to `.devcontainer/devcontainer.json`:
 
 When updating the container image, also update the distribution template:
 
-1. **templates/devcontainer/.devcontainer/devcontainer.json**: Verify it references the correct image and has matching settings
-2. **templates/devcontainer/.devcontainer/docker-compose.yml**: Verify it uses `image:` (not `build:`) and has matching configuration
-3. **templates/devcontainer/.devcontainer/postCreateCommand.sh**: Keep in sync with main version (Cline install commented out)
-4. **templates/devcontainer/Makefile**: Update if new commands are needed
-5. **templates/devcontainer/README.md**: Update documentation
+1. **template/.devcontainer/devcontainer.json**: Verify it references the correct image and has matching settings
+2. **template/.devcontainer/docker-compose.yml**: Verify it uses `image:` (not `build:`) and has matching configuration
+3. **template/.devcontainer/postCreateCommand.sh**: Keep in sync with main version (Cline install commented out)
+4. **template/Makefile**: Update if new commands are needed
+5. **template/README.md**: Update documentation
 
 **Note:** The `.mcp-servers/` directory is included directly from the repository root in the release zip (not duplicated in templates/). Updates to MCP servers only need to be made once in the root `.mcp-servers/` directory.
 
@@ -283,7 +283,7 @@ Add to `.mcp-servers/cline-config.json`:
 ### Template Testing
 
 1. Create a test directory
-2. Copy template files: `cp -r templates/devcontainer/* /tmp/test-project/`
+2. Copy template files: `cp -r template/* /tmp/test-project/`
 3. Open in VS Code and test "Reopen in Container"
 
 ## Code Style
