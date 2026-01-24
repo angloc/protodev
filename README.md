@@ -1,59 +1,125 @@
-# Protodev - Development Environment
+# Docker Development Environment ("Toolbox")
 
-A containerized development environment with Python (uv), JavaScript (Bun/pnpm), VNC for GUI apps, and Docker-in-Docker support.
+This repository provides a standardized, containerized development environment (the "Toolbox") for managing both this root project and any child projects or modules contained within it.
 
-## Features
+The environment is built on **Docker** and **Docker Compose**, with **Docker-in-Docker (DinD)** enabled. This architecture allows the main container to act as a "mothership" or toolbox, capable of spinning up and managing its own nested docker containers for individual sub-projects.
 
-- **Python 3.12** via uv with scientific packages (numpy, scipy, pandas, matplotlib)
-- **Node.js 22** with Bun and pnpm
-- **Docker-in-Docker** for container operations
-- **VNC/noVNC** for running GUI applications (e.g., Chrome)
-- **Google Chrome** for browser automation and testing
-- **Comprehensive CLI tools**: gh, act, fzf, ripgrep, yq, jq
+**IMPORTANT: Configuration Synchronization**
+All Docker configuration files are co-located in `.devcontainer`. When making changes to the development environment, ensure synchronization across:
+- `.devcontainer/Dockerfile` ↔ `.devcontainer/devcontainer.json`
+- `.devcontainer/docker-compose.yml` ↔ `.devcontainer/devcontainer.json`
+- `.devcontainer/postCreateCommand.sh` (shared by both setups)
+
+## Directory Structure
+
+- **`Makefile`**: Convenience wrapper for Docker Compose commands (e.g., `make up`, `make shell`).
+- **`README.md`**: This guide.
+- **`.devcontainer/`**:
+  - **`Dockerfile`**: Builds the development image with Docker CE, Python (uv), Node.js, VNC support, and comprehensive CLI tools.
+  - **`devcontainer.json`**: VS Code Dev Container configuration.
+  - **`docker-compose.yml`**: Orchestrates the container with Docker-in-Docker enabled.
+  - **`requirements.txt`**: Python dependencies (installed at runtime).
+  - **`package.json`**: Shared Node.js/NPM tools (e.g., `esbuild`, `prettier`, `typescript`).
+  - **`postCreateCommand.sh`**: Setup script that installs dependencies and configures the environment on startup.
+- **`projects/`**: Directory where individual child projects should be located.
+
+## Multi-Project Development
+
+This environment is designed to support developing multiple distinct projects simultaneously.
+
+### Project Structure
+
+- Individual projects should be placed as strict children of the `projects` directory.
+- Each project should be its own independent Git repository.
+- All projects share the running dev container for development tools.
+
+### Workflow
+
+1. **Start the Toolbox**: Run `docker compose up` (or `make up`) in this root directory.
+2. **Enter the Container**: Run `make shell` to enter the dev container.
+3. **Navigate to Project**: Inside the shell, switch to your project context:
+   ```bash
+   cd projects/your_specific_project
+   ```
+
+### Building and Running Projects
+
+While you rely on the dev container for common development tools (git, python, editors, etc.), you should build and run your applications in their own specific contexts. This ensures isolation and avoids modifying the main toolbox environment.
+
+Common approaches include:
+
+- **JupyterLab**: Open a notebook for data science or interactive coding.
+- **Docker**: Build and run a container from the project's `Dockerfile` using the `docker` command available inside the toolbox (via Docker-in-Docker).
+- **Docker Compose**: Orchestrate the project's services using its own `docker-compose.yml`.
 
 ## Quick Start
 
 You can run this environment in two ways:
 
-### Option 1: VS Code Dev Containers (Recommended)
+### Option 1: VS Code Dev Containers
 
 1. Open this folder in VS Code
 2. Install the "Dev Containers" extension
 3. Press `F1` → "Dev Containers: Reopen in Container"
 4. Wait for the container to build and start
 
-### Option 2: Docker Compose (Standalone)
+### Option 2: Docker Compose (Makefile)
+
+The easiest way to interact with the environment is via the `make` commands defined in the root directory.
+
+#### 1. Start the Environment
 
 ```bash
-# Start the development containers
 make up
+```
 
-# Open a shell in the container
+This will:
+- Build the development image (if needed)
+- Start the container with Docker-in-Docker enabled
+- Mount your project directory to `/workspace`
+- Run the setup scripts to install Python and Node.js dependencies
+- Start VNC server for GUI applications
+- Start Docker daemon as the main process
+
+#### 2. Enter the Toolbox
+
+To get a shell inside the running container:
+
+```bash
 make shell
+```
 
-# Stop the containers
+From here, you can run `python`, `npm`, `docker`, and other tools as if they were installed locally.
+
+#### 3. Check Status
+
+Manage and view the container status:
+
+```bash
+# Check running containers
+make ps
+
+# View logs
+make logs
+```
+
+#### 4. Stop the Environment
+
+```bash
 make down
 ```
 
-## Directory Structure
+#### 5. Use VS Code
 
-```
-.
-├── .devcontainer/
-│   ├── Dockerfile              # Container image definition
-│   ├── devcontainer.json       # VS Code Dev Container config
-│   ├── docker-compose.yml      # Standalone Docker Compose config
-│   ├── postCreateCommand.sh    # Setup script (SSH, git, deps)
-│   ├── requirements.txt        # Python dependencies
-│   └── package.json            # Node.js dependencies
-├── Makefile                    # Docker Compose convenience commands
-├── projects/                   # Child projects directory
-└── README.md                   # This file
-```
+You can continue using VS Code on your host machine to edit files. The project directory is mounted, so changes are immediately reflected in both the host and container.
 
-## Usage
+Alternatively, use VS Code's "Attach to Running Container" feature:
+1. Install the "Dev Containers" extension in VS Code
+2. Click the remote indicator in the bottom-left corner
+3. Select "Attach to Running Container"
+4. Choose `protodev`
 
-### Makefile Commands
+## Makefile Commands
 
 | Command | Description |
 |---------|-------------|
@@ -64,62 +130,148 @@ make down
 | `make shell` | Open a shell in the dev container |
 | `make jupyter` | Open a shell in the jupyter container |
 | `make logs` | View all container logs |
+| `make logs-dev` | View dev container logs only |
+| `make logs-jupyter` | View jupyter container logs only |
 | `make ps` | Show container status |
+| `make restart` | Restart containers |
 | `make clean` | Remove containers, images, and volumes |
+| `make dev` | Start only the dev container |
+| `make jupyter-up` | Start only the jupyter container |
+| `make exec CMD="..."` | Run a command in the dev container |
 | `make help` | Show all available commands |
 
-### Available Ports
+## Configuration Options
 
-| Port | Service |
-|------|---------|
-| 8080 | Application server |
-| 6080 | noVNC web interface (password: `vscode`) |
-| 5901 | VNC server |
-| 8888 | JupyterLab |
+### SSH Keys
 
-### Accessing the Virtual Display
+**For Windows users**: The default configuration mounts SSH keys from `%USERPROFILE%\.ssh`
 
-When running with docker-compose, a VNC server is started automatically:
+**For Linux/Mac users**: Edit both files:
 
-1. **Web browser**: Open http://localhost:6080/vnc.html (password: `vscode`)
-2. **VNC client**: Connect to `localhost:5901` (password: `vscode`)
+`.devcontainer/devcontainer.json`:
+```json
+"mounts": [
+    // Comment out the Windows line:
+    // "type=bind,source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
+    // Uncomment the Linux/Mac line:
+    "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
+]
+```
 
-From the VNC desktop, you can:
+`.devcontainer/docker-compose.yml`:
+```yaml
+# Comment out the Windows line:
+# - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+
+# Uncomment the Linux/Mac line:
+- ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
+```
+
+### Docker-in-Docker
+
+The environment runs Docker daemon inside the container using Docker-in-Docker. This provides:
+- Complete isolation from the host Docker
+- Ability to run nested containers
+- Persistent Docker data in a named volume (`docker-dind-data`)
+
+**Service-Based Architecture**: The Docker daemon runs as the main container process (foreground), making the container a proper service rather than an interactive shell. The container remains running as long as the Docker daemon is healthy.
+
+The startup sequence:
+1. Runs `postCreateCommand.sh` to install dependencies and configure the environment
+2. Starts VNC server and noVNC proxy
+3. Starts Docker daemon as the main process
+
+**Note**: This requires privileged mode, which is already configured in both `docker-compose.yml` and `devcontainer.json`.
+
+### VNC/noVNC (Virtual Display)
+
+The container includes VNC support for GUI applications like Google Chrome. When running with docker-compose, VNC starts automatically.
+
+Access via:
+- **Web browser**: http://localhost:6080/vnc.html (password: `vscode`)
+- **VNC client**: `localhost:5901` (password: `vscode`)
+
+From the VNC desktop:
 - Right-click to open the Fluxbox menu
-- Launch Google Chrome or xterm
-- Run any GUI application
+- Launch Google Chrome, xterm, or other GUI applications
 
-### Running Chrome
+### Running Chrome in the Container
 
 ```bash
 # Inside the container
 google-chrome --no-sandbox --disable-gpu
 ```
 
-## Configuration
+Or from the VNC desktop, right-click and select "Google Chrome" from the menu.
 
-### SSH Keys
+## Available Ports
 
-SSH keys are mounted read-only and copied to the container with proper permissions.
+| Port | Service |
+|------|---------|
+| 8080 | Application server |
+| 6080 | noVNC web interface |
+| 5901 | VNC server |
+| 8888 | JupyterLab |
 
-**Windows users** (default): Uses `%USERPROFILE%\.ssh`
+## Installed Tools
 
-**Linux/Mac users**: Edit these files:
-- `.devcontainer/devcontainer.json`: Uncomment the Linux mount, comment the Windows mount
-- `.devcontainer/docker-compose.yml`: Same as above
+### Languages & Runtimes
+- **Python 3.12** via uv (with numpy, scipy, pandas, matplotlib, jupyter)
+- **Node.js 22** via NodeSource
+- **Bun** (latest)
 
-### Adding Python Dependencies
+### Package Managers
+- **uv / uvx** - Fast Python package manager
+- **pip** - Standard Python package manager
+- **pnpm** - Fast, disk space efficient Node.js package manager
+- **npm** - Standard Node.js package manager
+- **Bun** - All-in-one JavaScript runtime & package manager
+
+### CLI Tools
+- **gh** - GitHub CLI for repository management
+- **act** - Run GitHub Actions locally
+- **fzf** - Fuzzy finder for command line
+- **rg** (ripgrep) - Fast recursive grep
+- **yq** - YAML processor
+- **jq** - JSON processor
+
+### Container Tools
+- **Docker CE** with Docker Compose
+- **docker buildx** - Extended build capabilities
+
+### Development Tools
+- **JupyterLab** - Interactive notebooks
+- **Ruff** - Fast Python linter/formatter
+- **Prettier** - Code formatter (JS/TS)
+- **ESBuild** - Fast bundler
+- **TypeScript** - Type checking
+
+### GUI Applications
+- **Google Chrome** - Web browser for automation/testing
+- **Fluxbox** - Lightweight window manager
+- **xterm** - Terminal emulator
+
+All Python packages from `.devcontainer/requirements.txt` and Node.js tools from `.devcontainer/package.json` are also installed at runtime.
+
+## Adding Dependencies
+
+### Python Dependencies
 
 Add packages to `.devcontainer/requirements.txt`:
 
 ```txt
-# Add your packages
-pandas
+# Your packages
 scikit-learn
 torch
+transformers
 ```
 
-### Adding Node.js Dependencies
+Then rebuild or run:
+```bash
+pip install -r .devcontainer/requirements.txt
+```
+
+### Node.js Dependencies
 
 Add packages to `.devcontainer/package.json`:
 
@@ -131,114 +283,172 @@ Add packages to `.devcontainer/package.json`:
 }
 ```
 
-## Installed Tools
-
-### Languages & Runtimes
-- Python 3.12 (via uv)
-- Node.js 22 (via NodeSource)
-- Bun (latest)
-
-### Package Managers
-- uv / uvx (Python)
-- pnpm (Node.js)
-- npm (Node.js)
-- Bun (Node.js)
-
-### CLI Tools
-- **gh** - GitHub CLI
-- **act** - Run GitHub Actions locally
-- **fzf** - Fuzzy finder
-- **rg** (ripgrep) - Fast recursive search
-- **yq** - YAML processor
-- **jq** - JSON processor
-- **docker** - Container runtime
-- **docker compose** - Container orchestration
-
-### Development
-- JupyterLab
-- Ruff (Python linter/formatter)
-- Prettier (JS/TS formatter)
-- ESBuild (bundler)
-- TypeScript
-
-### GUI
-- Google Chrome
-- Fluxbox (window manager)
-- xterm
-
-## Docker-in-Docker
-
-The environment supports running Docker commands inside the container:
-
+Then rebuild or run:
 ```bash
-# Inside the container
-docker ps
-docker build -t myimage .
-docker compose up -d
+cd .devcontainer && npm install
 ```
 
-When using docker-compose, the Docker daemon runs as the main container process. The Jupyter container connects to the dev container's Docker daemon.
+## Manual Docker Compose (Alternative to Make)
 
-## Multi-Project Development
+If you prefer not to use `make` (e.g., on Windows without Make installed), you can run standard Docker Compose commands pointing to the configuration file.
 
-This environment is designed as a "toolbox" for developing multiple projects:
+### Start the container
+```bash
+docker compose -f .devcontainer/docker-compose.yml up -d
+```
 
-1. Place projects in the `projects/` directory
-2. Each project can have its own Dockerfile for production builds
-3. Use the toolbox container for development, but build/run projects in their own containers
+### Stop the container
+```bash
+docker compose -f .devcontainer/docker-compose.yml down
+```
+
+### Rebuild after Dockerfile changes
+```bash
+docker compose -f .devcontainer/docker-compose.yml up -d --build
+```
+
+### View logs
+```bash
+docker compose -f .devcontainer/docker-compose.yml logs -f dev
+```
+
+### Open a shell
+```bash
+docker compose -f .devcontainer/docker-compose.yml exec dev bash
+```
+
+### Remove everything (including volumes)
+```bash
+docker compose -f .devcontainer/docker-compose.yml down -v
+```
 
 ## Troubleshooting
 
-### Container won't start
+### Docker Daemon Not Starting
 
-Check logs:
+The Docker daemon runs as the main container process. If the container is running but Docker commands fail, check the container logs:
+
 ```bash
-make logs
+# View container logs (includes Docker daemon output)
+make logs-dev
+# or
+docker compose -f .devcontainer/docker-compose.yml logs -f dev
+
+# Manually verify Docker is running inside the container
+docker compose -f .devcontainer/docker-compose.yml exec dev docker info
 ```
 
-### Docker commands fail inside container
-
-Ensure the Docker daemon is running:
+If the daemon failed to start, the container will exit. Check why with:
 ```bash
-docker info
+make ps
+make logs-dev
 ```
 
-If using VS Code, you may need to restart the container after the Docker daemon starts.
+If needed, rebuild the container:
+```bash
+make clean
+make up
+```
 
-### VNC not working
+### Permission Issues
+
+The container runs as the `vscode` user with sudo privileges. If you need to run commands as root:
+
+```bash
+# Execute commands with sudo inside the container
+sudo <command>
+```
+
+### SSH Key Permissions
+
+The `postCreateCommand.sh` script automatically copies SSH keys from `/home/vscode/.ssh-readonly` to `/home/vscode/.ssh` with correct permissions. If you have issues:
+
+```bash
+# Check SSH key permissions
+ls -la ~/.ssh
+
+# Manually fix permissions
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_*
+chmod 644 ~/.ssh/*.pub
+```
+
+### VNC Not Working
 
 Check VNC server status:
 ```bash
 vncserver -list
 ```
 
-Restart VNC:
+View VNC logs:
+```bash
+cat ~/.vnc/*:1.log
+```
+
+Restart VNC manually:
 ```bash
 vncserver -kill :1
+rm -rf /tmp/.X11-unix/X1 /tmp/.X1-lock
 vncserver :1 -geometry 1920x1080 -depth 24 -localhost no
 ```
 
-### SSH keys not working
+### Python Package Installation Issues
 
-SSH keys are copied from the read-only mount during setup. Check permissions:
+If Python packages fail to install:
+
 ```bash
-ls -la ~/.ssh
+make shell
+pip install --upgrade pip
+pip install -r ./.devcontainer/requirements.txt
 ```
 
-### Permission issues
+### Chrome Crashes
 
-The container runs as `vscode` user with sudo privileges:
+Chrome requires sufficient shared memory. The docker-compose configuration includes `shm_size: '2gb'` to prevent crashes. If Chrome still crashes:
+
 ```bash
-sudo <command>
+# Run Chrome with additional flags
+google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage
 ```
 
-## Configuration Synchronization
+## Differences: VS Code vs Docker Compose
 
-**IMPORTANT**: When modifying the development environment, keep these files in sync:
-- `.devcontainer/Dockerfile`
-- `.devcontainer/devcontainer.json`
-- `.devcontainer/docker-compose.yml`
-- `.devcontainer/postCreateCommand.sh`
+| Feature | VS Code Dev Container | Docker Compose |
+|---------|----------------------|----------------|
+| Docker daemon | Started by VS Code | Runs as main process |
+| VNC server | Not started by default | Started automatically |
+| Container mode | Interactive | Service (background) |
+| Access | VS Code attached | `docker exec` or `make shell` |
+| File editing | VS Code in container | Any editor on host |
+
+Both setups use the same Dockerfile and `postCreateCommand.sh`, ensuring consistency.
+
+## Example Workflow
+
+```bash
+# Start the environment (from project root)
+make up
+
+# Open a shell in the container
+make shell
+
+# Inside the container, run your development commands
+python script.py
+npm run dev
+docker build -t myapp .
+
+# Edit files on your host with VS Code or any editor
+# Changes are immediately available in the container
+
+# Access GUI via browser
+# Open http://localhost:6080/vnc.html
+
+# Access JupyterLab
+# Open http://localhost:8888
+
+# When done, stop the container
+make down
+```
 
 ## License
 
