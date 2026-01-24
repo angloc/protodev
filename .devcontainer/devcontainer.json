@@ -7,13 +7,9 @@
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 
-  // Mount SSH keys (read-only) for git operations
-  // For Windows users:
-  "mounts": [
-    "type=bind,source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
-    // For Linux/Mac users, comment the above line and uncomment this:
-    // "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh-readonly,consistency=cached"
-  ],
+  // Git authentication: VS Code automatically forwards your Git credentials (HTTPS) and SSH agent.
+  // No additional mounts or configuration needed for most users.
+  // See README.md for more details on Git authentication options.
 
   // Forward ports for VNC, noVNC, and applications
   "forwardPorts": [8080, 6080, 5901, 8888],

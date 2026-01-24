@@ -18,11 +18,10 @@ services:
       # Project files
       - ..:/workspace
 
-      # SSH keys (read-only mount from host)
-      # For Linux/Mac users, uncomment this line and comment the Windows line:
-      # - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
-      # For Windows users:
-      - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+      # Git authentication: Docker Compose doesn't have automatic credential forwarding.
+      # For SSH authentication, you can manually mount your SSH keys:
+      # - ${HOME}/.ssh:/home/vscode/.ssh:ro          # Linux/Mac
+      # - ${USERPROFILE}/.ssh:/home/vscode/.ssh:ro   # Windows
 
       # Docker-in-Docker volume
       - docker-dind-data:/var/lib/docker
@@ -123,11 +122,10 @@ services:
       # Project files
       - ..:/workspace
 
-      # SSH keys (read-only mount from host)
-      # For Linux/Mac users, uncomment this line and comment the Windows line:
-      # - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
-      # For Windows users:
-      - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+      # Git authentication: Docker Compose doesn't have automatic credential forwarding.
+      # For SSH authentication, you can manually mount your SSH keys:
+      # - ${HOME}/.ssh:/home/vscode/.ssh:ro          # Linux/Mac
+      # - ${USERPROFILE}/.ssh:/home/vscode/.ssh:ro   # Windows
 
     ports:
       - "8888:8888"
