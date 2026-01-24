@@ -113,14 +113,6 @@ The container automatically installs dependencies from:
 
 Just add these files to your project root.
 
-### SSH Keys
-
-SSH keys are mounted read-only from your host machine for git operations.
-
-**Windows** (default): Mounts from `%USERPROFILE%\.ssh`
-
-**Linux/Mac**: Edit `.devcontainer/devcontainer.json` and `.devcontainer/docker-compose.yml` to use `${HOME}/.ssh` instead.
-
 ### Pin Container Version
 
 For reproducible builds, pin to a specific version in `.devcontainer/devcontainer.json`:
