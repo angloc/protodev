@@ -17,9 +17,10 @@ protodev/
 │   └── package.json         # Node.js dependencies
 ├── template/                # Distribution template for users
 │   ├── .devcontainer/       # Pre-built image configuration
-│   ├── Makefile             # Convenience commands
-│   ├── README.md            # User documentation
-│   └── AGENTS.md            # AI agent documentation
+│   ├── .protodev/           # Documentation and agent mandates
+│   │   ├── README.md        # User documentation
+│   │   └── AGENTS.md        # AI agent documentation
+│   └── Makefile             # Convenience commands
 ├── .github/workflows/       # CI/CD pipelines
 │   └── docker-publish.yml   # Build and publish workflow
 ├── .mcp-servers/            # MCP server examples
@@ -173,30 +174,41 @@ Add to `.devcontainer/devcontainer.json`:
 
 ## Template Updates
 
-When updating the container image, also update the distribution template:
+The `template/` directory contains files distributed to users in `devcontainer.zip`. Some files are auto-generated, others are maintained manually:
 
-1. **template/.devcontainer/devcontainer.json**: Verify it references the correct image and has matching settings
-2. **template/.devcontainer/docker-compose.yml**: Verify it uses `image:` (not `build:`) and has matching configuration
-3. **template/.devcontainer/postCreateCommand.sh**: Keep in sync with main version (Cline install commented out)
-4. **template/.devcontainer/postStartCommand.sh**: Keep in sync with main version
-5. **template/Makefile**: Update if new commands are needed (typically mirrors user-facing commands)
-6. **template/README.md**: Update documentation
-7. **template/AGENTS.md**: Update documentation and usage guidance
+### Auto-generated Files (via `make template`)
+
+These files are generated from the root `.devcontainer/` configuration:
+
+- **template/.devcontainer/devcontainer.json**: Generated from root `.devcontainer/devcontainer.json` with `build` replaced by `image`
+- **template/.devcontainer/docker-compose.yml**: Generated from root `.devcontainer/docker-compose.yml` with `build` replaced by `image`
+- **template/.devcontainer/postCreateCommand.sh**: Copied from root `.devcontainer/postCreateCommand.sh`
+- **template/.devcontainer/postStartCommand.sh**: Copied from root `.devcontainer/postStartCommand.sh`
+
+Run `make template` to regenerate these files after changing the root `.devcontainer/` configuration.
+
+### Manually Maintained Files
+
+These files are maintained directly in `template/` and are not auto-generated:
+
+- **template/Makefile**: Convenience commands for users (mirrors user-facing commands)
+- **template/.protodev/README.md**: User documentation for the devcontainer
+- **template/.protodev/AGENTS.md**: AI agent documentation and usage guidance
 
 **Note:** The `.mcp-servers/` directory is included directly from the repository root in the release zip (not duplicated in templates/). Updates to MCP servers only need to be made once in the root `.mcp-servers/` directory.
 
 ### Generating the Template
 
-Use the provided script to regenerate the template from the root `.devcontainer/` configuration:
+To regenerate the auto-generated files from the root `.devcontainer/` configuration:
 
 ```bash
 make template
 ```
 
 This runs `.devcontainer/generate-template.sh` which:
-- Copies relevant files from `.devcontainer/` to `template/.devcontainer/`
-- Converts build configuration to use pre-built images
-- Updates paths and references for distribution
+- Copies shell scripts from `.devcontainer/` to `template/.devcontainer/`
+- Transforms `devcontainer.json` to use pre-built images (removes `build`, adds `image`)
+- Transforms `docker-compose.yml` to use pre-built images (removes `build`, adds `image`)
 
 ## CI/CD Pipeline
 
