@@ -385,7 +385,7 @@ For reproducible builds, pin to a specific version in `.devcontainer/devcontaine
 
 Available tags:
 - `latest` — Latest main branch build
-- `1.0.0` — Semantic version
+- `v1.0.0` — Semantic version (see repo for current details)
 - `sha-abc1234` — Specific commit
 
 ### Git Authentication
