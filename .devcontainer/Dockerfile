@@ -19,6 +19,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Set display for VNC
 ENV DISPLAY=:1
 
+# Fix for expired/missing Yarn GPG key in the base image
+RUN rm -f /etc/apt/sources.list.d/yarn.list \
+    && rm -f /usr/share/keyrings/yarnkey.gpg \
+    && apt-get update
+
 # ============================================
 # System packages and CLI tools
 # ============================================
