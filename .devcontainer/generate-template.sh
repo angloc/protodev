@@ -17,11 +17,12 @@ cp "$ROOT_DIR/.devcontainer/postCreateCommand.sh" "$TEMPLATE_DIR/.devcontainer/"
 cp "$ROOT_DIR/.devcontainer/postStartCommand.sh" "$TEMPLATE_DIR/.devcontainer/"
 
 # Transform devcontainer.json: replace "build" with "image"
-jq '
+# Strip JSON comments first (devcontainer.json uses JSON with Comments format)
+sed 's|//.*||g' "$ROOT_DIR/.devcontainer/devcontainer.json" | jq '
   del(.build) |
   del(.containerEnv.DISPLAY) |
   .image = "ghcr.io/angloc/protodev:latest"
-' "$ROOT_DIR/.devcontainer/devcontainer.json" > "$TEMPLATE_DIR/.devcontainer/devcontainer.json"
+' > "$TEMPLATE_DIR/.devcontainer/devcontainer.json"
 
 # Transform docker-compose.yml: replace build with image
 # Extract services and add image field, removing build fields
