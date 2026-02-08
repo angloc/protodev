@@ -138,6 +138,21 @@ The `postCreateCommand.sh` includes commented-out installation scripts for:
 
 Uncomment the ones you want and provide the required API keys.
 
+#### Agent Mandates
+
+This template includes a `.protodev/AGENTS.md` file that defines the mandate for AI agents working in this environment. **Projects using this devcontainer should reference `.protodev/AGENTS.md` in their own agent mandates** to ensure agents take maximum advantage of the tools and conventions provided.
+
+Add this to your project's agent configuration (e.g., `CLAUDE.md`, `.clinerules`, or similar):
+
+```markdown
+# Mandate
+**You must rigorously follow the provisions and instructions defined in `.protodev/AGENTS.md`.**
+
+Always refer to `.protodev/AGENTS.md` for information about the development environment and take full advantage of the tools provided. Do not install or use alternatives.
+```
+
+This ensures AI assistants understand the full capabilities of the development environment and follow consistent patterns across all projects using this container.
+
 ## Makefile Commands
 
 | Command | Description |
