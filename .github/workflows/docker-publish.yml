@@ -75,6 +75,7 @@ jobs:
       # Generate template from root .devcontainer/
       - name: Generate template
         run: |
+          chmod +x ./.devcontainer/generate-template.sh
           ./.devcontainer/generate-template.sh
 
       # Create devcontainer.zip template for users
