@@ -157,9 +157,16 @@ fi
 # curl -fsSL https://dl.google.com/conductor/install.sh | bash
 # echo "✅ Conductor installed. Authenticate with gcloud and run: conductor"
 
-echo "Installing Cline CLI..."
-npm install -g cline
-echo "✅ Cline CLI installed. Run: cline"
+#echo "Installing Cline CLI locally..."
+#(cd .devcontainer && npm install cline --silent)
+
+## Ensure .bin directory is in PATH for current and future sessions
+#DEVCONTAINER_BIN="$(pwd)/.devcontainer/node_modules/.bin"
+#export PATH="${DEVCONTAINER_BIN}:$PATH"
+#if ! grep -q "export PATH=\$PATH:${DEVCONTAINER_BIN}" ~/.bashrc 2>/dev/null; then
+#    echo "export PATH=\$PATH:${DEVCONTAINER_BIN}" >> ~/.bashrc
+#fi
+#echo "✅ Cline CLI installed. Run: cline"
 
 echo ""
 echo "✅ Development environment ready!"

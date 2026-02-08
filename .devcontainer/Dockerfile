@@ -72,6 +72,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tigervnc-standalone-server \
     tigervnc-common \
+    tigervnc-tools \
     fluxbox \
     dbus-x11 \
     x11-utils \
