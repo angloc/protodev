@@ -2,6 +2,7 @@
   "name": "Dev Environment",
   "image": "ghcr.io/angloc/protodev:latest",
   "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 
   // Docker-in-Docker is already included in the protodev image.
   // No additional features needed.
@@ -87,6 +88,9 @@
 
   // Post-create commands - run setup script
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+
+  // Post-start commands - start background services (dockerd, VNC, noVNC)
+  "postStartCommand": "./.devcontainer/postStartCommand.sh",
 
   // Run as vscode user (non-root for better security)
   "remoteUser": "vscode",

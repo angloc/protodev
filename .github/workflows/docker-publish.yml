@@ -72,6 +72,11 @@ jobs:
           # Uncomment below for multi-platform builds (slower)
           # platforms: linux/amd64,linux/arm64
 
+      # Generate template from root .devcontainer/
+      - name: Generate template
+        run: |
+          ./.devcontainer/generate-template.sh
+
       # Create devcontainer.zip template for users
       - name: Create devcontainer.zip
         run: |

@@ -12,7 +12,7 @@
 #   make jupyter  - Open a shell in the jupyter container
 #   make clean    - Remove containers, images, and volumes
 
-.PHONY: up down build shell logs jupyter clean ps restart
+.PHONY: up down build shell logs jupyter clean ps restart template
 
 # Docker Compose file location
 COMPOSE_FILE := .devcontainer/docker-compose.yml
@@ -77,6 +77,10 @@ jupyter-up:
 exec:
 	docker compose -f $(COMPOSE_FILE) exec dev $(CMD)
 
+# Generate template from root .devcontainer/
+template:
+	./.devcontainer/generate-template.sh
+
 # Show help
 help:
 	@echo "Available targets:"
@@ -94,5 +98,6 @@ help:
 	@echo "  clean       - Remove containers, images, and volumes"
 	@echo "  dev         - Start only the dev container"
 	@echo "  jupyter-up  - Start only the jupyter container"
+	@echo "  template    - Generate template from root .devcontainer/"
 	@echo "  exec        - Run a command in the dev container"
 	@echo "              Example: make exec CMD=\"python script.py\""

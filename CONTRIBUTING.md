@@ -10,13 +10,16 @@ protodev/
 │   ├── Dockerfile           # Container image definition
 │   ├── docker-compose.yml   # Development orchestration
 │   ├── devcontainer.json    # VS Code Dev Container config
-│   ├── postCreateCommand.sh # Runtime setup script
+│   ├── postCreateCommand.sh # Runtime setup script (runs once after create)
+│   ├── postStartCommand.sh  # Runtime setup script (runs on every start)
+│   ├── generate-template.sh # Template generation script
 │   ├── requirements.txt     # Python dependencies
 │   └── package.json         # Node.js dependencies
 ├── template/                # Distribution template for users
 │   ├── .devcontainer/       # Pre-built image configuration
 │   ├── Makefile             # Convenience commands
-│   └── README.md            # User documentation
+│   ├── README.md            # User documentation
+│   └── AGENTS.md            # AI agent documentation
 ├── .github/workflows/       # CI/CD pipelines
 │   └── docker-publish.yml   # Build and publish workflow
 ├── .mcp-servers/            # MCP server examples
@@ -175,11 +178,25 @@ When updating the container image, also update the distribution template:
 1. **template/.devcontainer/devcontainer.json**: Verify it references the correct image and has matching settings
 2. **template/.devcontainer/docker-compose.yml**: Verify it uses `image:` (not `build:`) and has matching configuration
 3. **template/.devcontainer/postCreateCommand.sh**: Keep in sync with main version (Cline install commented out)
-4. **template/Makefile**: Update if new commands are needed
-5. **template/README.md**: Update documentation
-6. **template/AGENTS.md**: Update documentation and usage guidance
+4. **template/.devcontainer/postStartCommand.sh**: Keep in sync with main version
+5. **template/Makefile**: Update if new commands are needed (typically mirrors user-facing commands)
+6. **template/README.md**: Update documentation
+7. **template/AGENTS.md**: Update documentation and usage guidance
 
 **Note:** The `.mcp-servers/` directory is included directly from the repository root in the release zip (not duplicated in templates/). Updates to MCP servers only need to be made once in the root `.mcp-servers/` directory.
+
+### Generating the Template
+
+Use the provided script to regenerate the template from the root `.devcontainer/` configuration:
+
+```bash
+make template
+```
+
+This runs `.devcontainer/generate-template.sh` which:
+- Copies relevant files from `.devcontainer/` to `template/.devcontainer/`
+- Converts build configuration to use pre-built images
+- Updates paths and references for distribution
 
 ## CI/CD Pipeline
 
@@ -223,7 +240,10 @@ This triggers the workflow to:
 | `make dev` | Start only dev container |
 | `make jupyter-up` | Start only jupyter container |
 | `make exec CMD="..."` | Run command in container |
+| `make template` | Generate template from root .devcontainer/ |
 | `make help` | Show all commands |
+
+**Note:** The root Makefile is for maintainers building the container image. The template Makefile (distributed to users) includes a `make pull` command for updating the pre-built image.
 
 ## MCP Servers
 

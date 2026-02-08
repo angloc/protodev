@@ -89,6 +89,9 @@
   // Post-create commands - run setup script
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
 
+  // Post-start commands - start background services (dockerd, VNC, noVNC)
+  "postStartCommand": "./.devcontainer/postStartCommand.sh",
+
   // Run as vscode user (non-root for better security)
   "remoteUser": "vscode",
 
