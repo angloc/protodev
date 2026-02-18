@@ -59,14 +59,38 @@ fi
 # ============================================
 if [ -f ./.devcontainer/package.json ]; then
     echo "Installing NPM tools..."
-    (cd .devcontainer && npm install --silent)
+    cd .devcontainer
 
-    # Add node_modules/.bin to PATH if not already present
-    DEVCONTAINER_BIN="$(pwd)/.devcontainer/node_modules/.bin"
-    if ! grep -q "export PATH=\$PATH:${DEVCONTAINER_BIN}" ~/.bashrc 2>/dev/null; then
-        echo "export PATH=\$PATH:${DEVCONTAINER_BIN}" >> ~/.bashrc
+    # Use npm ci if package-lock.json exists (faster, more reliable)
+    # Otherwise use npm install with fallback and better error visibility
+    if [ -f package-lock.json ]; then
+        npm ci --prefer-offline 2>&1 || npm ci 2>&1 || {
+            echo "⚠️  npm ci failed, trying npm install..."
+            npm install 2>&1
+        }
+    else
+        # Try install with timeout and retry logic
+        npm install --prefer-offline 2>&1 || {
+            echo "⚠️  First npm install attempt failed, retrying..."
+            sleep 2
+            npm install 2>&1
+        }
     fi
-    echo "✅ NPM tools installed"
+
+    npm_exit_code=$?
+    cd - > /dev/null
+
+    if [ $npm_exit_code -eq 0 ]; then
+        # Add node_modules/.bin to PATH if not already present
+        DEVCONTAINER_BIN="$(pwd)/.devcontainer/node_modules/.bin"
+        if ! grep -q "export PATH=\$PATH:${DEVCONTAINER_BIN}" ~/.bashrc 2>/dev/null; then
+            echo "export PATH=\$PATH:${DEVCONTAINER_BIN}" >> ~/.bashrc
+        fi
+        echo "✅ NPM tools installed"
+    else
+        echo "⚠️  NPM install failed with exit code $npm_exit_code"
+        echo "You can manually run: cd .devcontainer && npm install"
+    fi
 else
     echo "⚠️  No .devcontainer/package.json found"
 fi
@@ -111,7 +135,7 @@ fi
 # curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/antigravity-repo-key.gpg
 # echo "deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ antigravity-debian main" | sudo tee /etc/apt/sources.list.d/antigravity.list > /dev/null
 # sudo apt-get update && sudo apt-get install -y antigravity
-# echo "✅ Antigravity installed. Run via VNC: antigravity --no-sandbox --disable-gpu"
+# echo "✅ Antigravity installed. Run via Xpra: xpra start :100 --start=antigravity"
 
 # --------------------------------------------
 # Claude Code (Anthropic)
@@ -177,11 +201,14 @@ echo "  • Bun                 • Docker"
 echo "  • GitHub CLI (gh)     • act (GitHub Actions)"
 echo "  • ripgrep (rg)        • fzf"
 echo "  • yq                  • jq"
-echo "  • Google Chrome       • VNC (port 5901)"
+echo "  • Google Chrome       • Xpra (GUI apps)"
 echo ""
 echo "Ports:"
 echo "  • 8080 - Application server"
-echo "  • 6080 - noVNC web interface (password: vscode)"
-echo "  • 5901 - VNC server"
+echo "  • 14500 - Xpra HTML5 web interface"
 echo "  • 8888 - JupyterLab"
+echo ""
+echo "To start a GUI app with Xpra:"
+echo "  xpra start :100 --start=antigravity"
+echo "  Then connect via http://localhost:14500"
 echo ""

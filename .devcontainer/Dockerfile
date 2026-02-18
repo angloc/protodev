@@ -1,5 +1,5 @@
 # Dev Container Dockerfile
-# Reusable development environment with Python (uv), JavaScript (Bun/pnpm), VNC, and Docker-in-Docker
+# Reusable development environment with Python (uv), JavaScript (Bun/pnpm), Xpra, and Docker-in-Docker
 #
 # IMPORTANT: This file is mirrored by the Docker Compose setup
 # Any changes to features, ports, mounts, or configuration should be synchronized with:
@@ -7,7 +7,7 @@
 # - .devcontainer/docker-compose.yml
 # - .devcontainer/postCreateCommand.sh
 
-FROM mcr.microsoft.com/devcontainers/python:3.12
+FROM python:3.12-bookworm
 
 # Avoid prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -16,13 +16,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Set display for VNC
-ENV DISPLAY=:1
+# Set display for Xpra
+ENV DISPLAY=:100
 
-# Fix for expired/missing Yarn GPG key in the base image
-RUN rm -f /etc/apt/sources.list.d/yarn.list \
-    && rm -f /usr/share/keyrings/yarnkey.gpg \
-    && apt-get update
+# ============================================
+# Create vscode user (not present in official Python image)
+# ============================================
+RUN useradd -m -s /bin/bash vscode \
+    && mkdir -p /workspace \
+    && chown -R vscode:vscode /workspace
 
 # ============================================
 # System packages and CLI tools
@@ -67,25 +69,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
-# VNC and noVNC for desktop/GUI support
+# Xpra for GUI application streaming
 # ============================================
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    tigervnc-standalone-server \
-    tigervnc-common \
-    tigervnc-tools \
-    fluxbox \
-    dbus-x11 \
+# Add Xpra repository (not available in standard Debian repos)
+RUN wget -O "/usr/share/keyrings/xpra.asc" https://xpra.org/xpra.asc \
+    && echo "deb [signed-by=/usr/share/keyrings/xpra.asc] https://xpra.org/ bookworm main" > /etc/apt/sources.list.d/xpra.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    xpra \
     x11-utils \
-    x11-xserver-utils \
     xdg-utils \
     xterm \
+    dbus-x11 \
     && rm -rf /var/lib/apt/lists/*
-
-# Install noVNC for web-based VNC access
-RUN mkdir -p /usr/local/novnc \
-    && curl -sSL https://github.com/novnc/noVNC/archive/v1.5.0.tar.gz | tar -xzC /usr/local/novnc --strip-components=1 \
-    && mkdir -p /usr/local/novnc/utils/websockify \
-    && curl -sSL https://github.com/novnc/websockify/archive/v0.12.0.tar.gz | tar -xzC /usr/local/novnc/utils/websockify --strip-components=1
 
 # ============================================
 # Google Chrome (for browser automation/testing)
@@ -156,15 +151,14 @@ RUN curl -fsSL https://github.com/duckdb/duckdb/releases/latest/download/duckdb_
     && rm /tmp/duckdb.zip
 
 # ============================================
-# Python 3.12 via uv
+# uv - Fast Python package installer
 # ============================================
 RUN curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz \
     | tar xz -C /usr/local/bin --strip-components=1 \
-    && chmod +x /usr/local/bin/uv /usr/local/bin/uvx \
-    && /usr/local/bin/uv python install 3.12
+    && chmod +x /usr/local/bin/uv /usr/local/bin/uvx
 
-# Add Python to PATH for vscode user
-ENV PATH="/home/vscode/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin:/home/vscode/.local/bin:$PATH"
+# Add Python local bin to PATH for vscode user
+ENV PATH="/home/vscode/.local/bin:$PATH"
 
 # ============================================
 # Node.js 22 LTS
@@ -188,7 +182,7 @@ RUN npm install -g pnpm
 # ============================================
 # Python packages via uv (system-wide)
 # ============================================
-RUN uv pip install --python 3.12 --system --break-system-packages \
+RUN uv pip install --python 3.12 --system \
     numpy \
     scipy \
     matplotlib \
@@ -221,47 +215,18 @@ RUN echo '[ -f /opt/fzf/shell/key-bindings.bash ] && source /opt/fzf/shell/key-b
     && echo '[ -f /opt/fzf/shell/completion.bash ] && source /opt/fzf/shell/completion.bash' >> /etc/bash.bashrc
 
 # ============================================
-# VNC Configuration for vscode user
+# Xpra configuration for vscode user
 # ============================================
-RUN mkdir -p /home/vscode/.vnc /home/vscode/.fluxbox /home/vscode/.config/tigervnc \
-    && chown -R vscode:vscode /home/vscode/.vnc /home/vscode/.fluxbox /home/vscode/.config
-
-# Create VNC startup script
-COPY --chown=vscode:vscode <<EOF /home/vscode/.vnc/xstartup
-#!/bin/bash
-unset SESSION_MANAGER
-unset DBUS_SESSION_BUS_ADDRESS
-xsetroot -cursor_name left_ptr
-# Start D-Bus session for apps requiring it (like Chrome)
-exec dbus-launch --exit-with-session fluxbox
-EOF
-RUN chmod +x /home/vscode/.vnc/xstartup
-
-# Create Fluxbox menu with development apps
-COPY --chown=vscode:vscode <<EOF /home/vscode/.fluxbox/menu
-[begin] (Development)
-  [exec] (Terminal) {xterm}
-  [exec] (Google Chrome) {google-chrome --no-sandbox --disable-gpu}
-  [separator]
-  [submenu] (Fluxbox)
-    [config] (Configuration)
-    [submenu] (Styles) {/usr/share/fluxbox/styles}
-    [end]
-    [reconfig] (Reconfigure)
-    [restart] (Restart)
-    [exit] (Exit)
-  [end]
-[end]
-EOF
+RUN mkdir -p /home/vscode/.xpra \
+    && chown -R vscode:vscode /home/vscode/.xpra
 
 # ============================================
 # Expose ports
 # ============================================
 # 8080: Application server
-# 6080: noVNC web interface
-# 5901: VNC server
+# 14500: Xpra HTML5 web interface
 # 8888: JupyterLab
-EXPOSE 8080 6080 5901 8888
+EXPOSE 8080 14500 8888
 
 # ============================================
 # Set working directory

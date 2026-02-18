@@ -18,7 +18,7 @@ echo "🚀 Starting background services..."
 # ============================================
 if ! pgrep -x "dockerd" > /dev/null; then
     echo "Starting Docker daemon..."
-    sudo dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 &
+    sudo dockerd &
     # Wait for dockerd to be ready
     for i in {1..30}; do
         if docker info >/dev/null 2>&1; then
@@ -32,56 +32,17 @@ else
 fi
 
 # ============================================
-# Start VNC server
+# Start Xpra (GUI application streaming)
 # ============================================
-if ! pgrep -x "Xtigervnc" > /dev/null; then
-    echo "Starting VNC server..."
-    # Cleanup pre-existing locks to ensure clean start
-    vncserver -kill :1 2>/dev/null || true
-    rm -rf /tmp/.X11-unix/X1 /tmp/.X1-lock 2>/dev/null || true
-
-    sudo chown -R vscode:vscode /home/vscode/.vnc 2>/dev/null || true
-    mkdir -p /home/vscode/.vnc
-    mkdir -p /home/vscode/.config/tigervnc
-    sudo chown -R vscode:vscode /home/vscode/.config 2>/dev/null || true
-
-    # Set VNC password
-    echo "vscode" | vncpasswd -f > /home/vscode/.vnc/passwd
-    chmod 600 /home/vscode/.vnc/passwd
-
-    # Copy config files to new location to satisfy TigerVNC
-    cp /home/vscode/.vnc/passwd /home/vscode/.config/tigervnc/passwd 2>/dev/null || true
-    cp /home/vscode/.vnc/xstartup /home/vscode/.config/tigervnc/xstartup 2>/dev/null || true
-    chmod 600 /home/vscode/.config/tigervnc/passwd 2>/dev/null || true
-    chmod 755 /home/vscode/.config/tigervnc/xstartup 2>/dev/null || true
-
-    # Start VNC with localhost no to allow external connections
-    vncserver :1 -geometry 1920x1080 -depth 24 -localhost no -rfbauth /home/vscode/.vnc/passwd
-    echo "✅ VNC server started on port 5901"
+if ! pgrep -x "xpra" > /dev/null; then
+    echo "Starting Xpra HTML5 server..."
+    mkdir -p /home/vscode/.xpra
+    # Start Xpra in HTML5 mode for web access to GUI apps
+    xpra start --bind-tcp=0.0.0.0:14500 --html=on --daemon=no --log-file=/home/vscode/.xpra/xpra.log &
+    sleep 2
+    echo "✅ Xpra started on port 14500"
 else
-    echo "✅ VNC server already running"
-fi
-
-# ============================================
-# Start noVNC (web-based VNC client)
-# ============================================
-if ! pgrep -f "novnc_proxy\|launch.sh" > /dev/null; then
-    echo "Starting noVNC..."
-    # Set up default index page for nicer experience
-    if [ -d /usr/local/novnc ] && [ ! -f /usr/local/novnc/index.html ]; then
-        sudo ln -s vnc.html /usr/local/novnc/index.html 2>/dev/null || true
-    fi
-
-    if [ -f /usr/local/novnc/utils/novnc_proxy ]; then
-        /usr/local/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
-    elif [ -f /usr/local/novnc/utils/launch.sh ]; then
-        /usr/local/novnc/utils/launch.sh --vnc localhost:5901 --listen 6080 &
-    else
-        echo "⚠️  noVNC proxy script not found"
-    fi
-    echo "✅ noVNC started on port 6080"
-else
-    echo "✅ noVNC already running"
+    echo "✅ Xpra already running"
 fi
 
 # ============================================
@@ -103,6 +64,10 @@ echo "✅ Background services started!"
 echo ""
 echo "Services available:"
 echo "  • Docker daemon     - unix:///var/run/docker.sock"
-echo "  • VNC server        - localhost:5901 (password: vscode)"
-echo "  • noVNC web client  - http://localhost:6080"
+echo "  • Xpra HTML5        - http://localhost:14500"
+echo "  • JupyterLab        - http://localhost:8888 (start manually if needed)"
+echo ""
+echo "To start a GUI application with Xpra:"
+echo "  xpra start :100 --start=antigravity"
+echo "  Then connect via http://localhost:14500"
 echo ""

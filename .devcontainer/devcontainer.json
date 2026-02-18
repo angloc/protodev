@@ -11,8 +11,8 @@
   // No additional mounts or configuration needed for most users.
   // See README.md for more details on Git authentication options.
 
-  // Forward ports for VNC, noVNC, and applications
-  "forwardPorts": [8080, 6080, 5901, 8888],
+  // Forward ports for Xpra, JupyterLab, and applications
+  "forwardPorts": [8080, 14500, 8888],
 
   // VS Code Extensions
   "customizations": {
@@ -83,13 +83,13 @@
   // Environment variables
   "remoteEnv": {
     "PATH": "${containerEnv:PATH}:/usr/local/bun/bin",
-    "DISPLAY": ":1"
+    "DISPLAY": ":100"
   },
 
   // Post-create commands - run setup script
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
 
-  // Post-start commands - start background services (dockerd, VNC, noVNC)
+  // Post-start commands - start background services (dockerd, Xpra)
   "postStartCommand": "./.devcontainer/postStartCommand.sh",
 
   // Run as vscode user (non-root for better security)
@@ -101,6 +101,6 @@
     "--shm-size=2g"
   ],
   "containerEnv": {
-    "DISPLAY": ":1"
+    "DISPLAY": ":100"
   }
 }
