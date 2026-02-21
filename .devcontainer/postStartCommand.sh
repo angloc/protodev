@@ -37,8 +37,15 @@ fi
 if ! pgrep -x "xpra" > /dev/null; then
     echo "Starting Xpra HTML5 server..."
     mkdir -p /home/vscode/.xpra
-    # Start Xpra in HTML5 mode for web access to GUI apps
-    xpra start --bind-tcp=0.0.0.0:14500 --html=on --daemon=no --log-file=/home/vscode/.xpra/xpra.log &
+    # Set XDG_RUNTIME_DIR to avoid "not defined" warning
+    export XDG_RUNTIME_DIR=/home/vscode/.xpra/runtime
+    mkdir -p "$XDG_RUNTIME_DIR"
+    chmod 0700 "$XDG_RUNTIME_DIR"
+    # Start Xpra on display :100 (matches DISPLAY env var) in HTML5 mode
+    # --keyboard-layout=us ensures keyboard input works in the HTML5 client
+    xpra start :100 --bind-tcp=0.0.0.0:14500 --html=on --daemon=yes \
+        --keyboard-layout=uk \
+        --log-file=/home/vscode/.xpra/xpra.log
     sleep 2
     echo "✅ Xpra started on port 14500"
 else

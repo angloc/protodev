@@ -57,9 +57,12 @@ services:
         fi
 
         # Start Xpra HTML5 server for GUI apps
+        # --keyboard-layout=us ensures keyboard input works in the HTML5 client
         echo "Starting Xpra HTML5 server..."
         mkdir -p /home/vscode/.xpra
-        xpra start --bind-tcp=0.0.0.0:14500 --html=on --daemon=no --log-file=/home/vscode/.xpra/xpra.log &
+        xpra start :100 --bind-tcp=0.0.0.0:14500 --html=on --daemon=no \
+            --keyboard-layout=uk \
+            --log-file=/home/vscode/.xpra/xpra.log &
 
         # Start Docker daemon as the main process (foreground)
         echo "Starting Docker daemon as main process..."

@@ -39,6 +39,29 @@ Remove-Item devcontainer.zip
 
 > **Tip:** On Windows, if you use [Git Bash](https://git-scm.com/downloads) or run VS Code in [WSL](https://learn.microsoft.com/en-us/windows/wsl/), you can use the Linux/bash commands above. Running VS Code in WSL gives you the same experience as native Linux.
 
+### Step 2: Customise for Your Project
+
+After extracting the template, you may choose to pin it for your project:
+
+1. **Add dependencies:**
+   - Create `requirements.txt` in your project root for Python packages
+   - Create `package.json` in your project root for Node.js packages
+   - the postCreateCommand.sh will install these when the container is (re)built
+1. **Pin a specific container version:**
+   Edit `.devcontainer/devcontainer.json` to use a specific tag instead of `latest`:
+   ```json
+   {
+     "image": "ghcr.io/angloc/protodev:1.0.0"
+   }
+   ```
+
+1. **Configure VS Code extensions:**
+   Add/remove extensions in `.devcontainer/devcontainer.json` → `customizations.vscode.extensions`
+
+1. **Set up MCP servers:**
+   The `.mcp-servers/` directory is included with an example server. Create your own MCP servers here and register them in `.mcp-servers/cline-config.json`. MCP servers are installed when you startup your container.
+
+
 ### Step 2: Choose Your Workflow
 
 #### Option A: VS Code Dev Containers (Recommended)
@@ -86,28 +109,6 @@ docker compose -f .devcontainer/docker-compose.yml exec dev bash
 # Stop the container
 docker compose -f .devcontainer/docker-compose.yml down
 ```
-
-### Step 3: Customise for Your Project
-
-After extracting the template, customise it for your project:
-
-1. **Add dependencies:**
-   - Create `requirements.txt` in your project root for Python packages
-   - Create `package.json` in your project root for Node.js packages
-   - the postCreateCommand.sh will install these when the container is (re)built
-2. **Pin a specific container version:**
-   Edit `.devcontainer/devcontainer.json` to use a specific tag instead of `latest`:
-   ```json
-   {
-     "image": "ghcr.io/angloc/protodev:1.0.0"
-   }
-   ```
-
-3. **Configure VS Code extensions:**
-   Add/remove extensions in `.devcontainer/devcontainer.json` → `customizations.vscode.extensions`
-
-4. **Set up MCP servers:**
-   The `.mcp-servers/` directory is included with an example server. Create your own MCP servers here and register them in `.mcp-servers/cline-config.json`.
 
 ---
 

@@ -1,8 +1,18 @@
 # Docker Development Environment
 
-A pre-built, standardized development container with Python, Node.js, and comprehensive development tools. Add it to any project directory and get a consistent development environment instantly.
+This is the repository for building the standard rich development environment.
 
-The container image is downloaded once and cached locally, then can be used across all your projects.
+The rich development environment is a pre-built, standardized Docker container with Python, Node.js, and comprehensive development tools. Add it to a project directory and get a consistent development environment instantly.
+
+The container image is downloaded once and cached locally, then can be used across many projects.
+
+ The environment is built by a github workflow in
+`.github/workflows/docker-publish.yml`. The deliverables are:
+- a Docker image providing the environment
+- a zip of a .devcontainer folder that is added to the project repo to facilitate using the environment
+
+The purpose of this project is to maintain the environment and publish the deliverables. So this README file is describing
+how to maintain the project. User documentation for the environment itself is part of the deliverable package and is stored in the `template` folder. The files there are relevant only to environment users, not to yourself as an environment maintainer.
 
 ## Quick Start
 
@@ -88,8 +98,7 @@ numpy, scipy, pandas, matplotlib, jupyter, jupyterlab, pytest, ruff, playwright
 
 ### GUI Applications (via VNC)
 - Google Chrome (for browser automation)
-- Fluxbox window manager
-- noVNC web-based access
+- xstra web-based window manager and virtual display
 
 ### VS Code Extensions
 Python, Jupyter, ESLint, Prettier, Docker, GitLens, GitHub Copilot, and more - all pre-configured.
@@ -99,8 +108,7 @@ Python, Jupyter, ESLint, Prettier, Docker, GitLens, GitHub Copilot, and more - a
 | Port | Service |
 |------|---------|
 | 8080 | Application server |
-| 6080 | noVNC web interface (password: `vscode`) |
-| 5901 | VNC server |
+| 14500 | Xpra HTML5 virtual desktop |
 | 8888 | JupyterLab |
 
 ## Customization
@@ -175,13 +183,13 @@ Container names are auto-generated from your project directory:
 
 Run multiple projects simultaneously (adjust port mappings if needed).
 
-## VNC / GUI Access
+## GUI Access (Xpra)
 
-Access the virtual desktop at http://localhost:6080/vnc.html (password: `vscode`)
+Access the virtual desktop at http://localhost:14500
 
 Run Chrome:
 ```bash
-google-chrome --no-sandbox --disable-gpu
+DISPLAY=:1 google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage --no-first-run --disable-sync &
 ```
 
 ## Container Registry
@@ -205,27 +213,6 @@ docker pull ghcr.io/angloc/protodev:latest
 make logs-dev    # Check logs
 make clean       # Remove and recreate
 make up
-```
-
-### VNC Not Working
-
-Inside container:
-```bash
-vncserver -list
-cat ~/.vnc/*:1.log
-```
-
-### Chrome Crashes
-
-```bash
-google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage
-```
-
-### Permission Issues
-
-The container runs as `vscode` user with sudo access:
-```bash
-sudo <command>
 ```
 
 ## Contributing

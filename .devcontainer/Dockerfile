@@ -18,6 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Set display for Xpra
 ENV DISPLAY=:100
+ENV XDG_RUNTIME_DIR=/home/vscode/.xpra/runtime
 
 # ============================================
 # Create vscode user (not present in official Python image)
@@ -76,6 +77,8 @@ RUN wget -O "/usr/share/keyrings/xpra.asc" https://xpra.org/xpra.asc \
     && echo "deb [signed-by=/usr/share/keyrings/xpra.asc] https://xpra.org/ bookworm main" > /etc/apt/sources.list.d/xpra.list \
     && apt-get update && apt-get install -y --no-install-recommends \
     xpra \
+    xpra-html5 \
+    xpra-x11 \
     x11-utils \
     xdg-utils \
     xterm \
@@ -217,7 +220,8 @@ RUN echo '[ -f /opt/fzf/shell/key-bindings.bash ] && source /opt/fzf/shell/key-b
 # ============================================
 # Xpra configuration for vscode user
 # ============================================
-RUN mkdir -p /home/vscode/.xpra \
+RUN mkdir -p /home/vscode/.xpra/runtime \
+    && chmod 0700 /home/vscode/.xpra/runtime \
     && chown -R vscode:vscode /home/vscode/.xpra
 
 # ============================================
