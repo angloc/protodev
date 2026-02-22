@@ -128,7 +128,9 @@ RUN curl -fsSL https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ri
 # fzf - Fuzzy finder
 # ============================================
 RUN git clone --depth 1 https://github.com/junegunn/fzf.git /opt/fzf \
-    && /opt/fzf/install --all --no-zsh --no-fish
+    && /opt/fzf/install --all --no-zsh --no-fish \
+    && ln -s /opt/fzf/bin/fzf /usr/local/bin/fzf \
+    && ln -s /opt/fzf/bin/fzf-tmux /usr/local/bin/fzf-tmux
 
 # ============================================
 # GitHub CLI (gh)
@@ -173,9 +175,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 RUN npm install -g esbuild
 
 # ============================================
-# Python CLI tools via uv tool
+# Python CLI tools via uv pip (system-wide)
 # ============================================
-RUN uv tool install ruff pytest
+RUN uv pip install --python 3.12 --system ruff pytest
 
 # ============================================
 # Python packages via uv (system-wide)

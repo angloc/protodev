@@ -59,9 +59,9 @@ services:
             --keyboard-layout=us \
             --log-file=/home/vscode/.xpra/xpra.log &
 
-        # Start Docker daemon as the main process (foreground)
-        echo "Starting Docker daemon as main process..."
-        exec sudo dockerd
+        # Keep container running
+        echo "Container ready!"
+        tail -f /dev/null
 
     # Environment variables
     environment:
