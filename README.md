@@ -130,13 +130,26 @@ docker pull ghcr.io/angloc/protodev:latest
 This repository has a minimal `.devcontainer` for maintainers. It provides:
 - GitHub CLI (`gh`) for release management
 - Git for version control
-- Docker CLI for local testing
+- Docker (Docker-in-Docker) for local testing
 
-To use it:
+### Using the Dev Container (Recommended)
+
+To use the dev container:
 1. Open in VS Code
 2. When prompted, reopen in container
+3. Docker and all necessary tools will be automatically available
 
-No special tools are needed - the build happens in GitHub Actions.
+### Working Without the Dev Container
+
+If you prefer not to use the dev container, ensure you have the following prerequisites installed on your host machine:
+
+| Tool | Purpose | Installation |
+|------|---------|--------------|
+| **Docker** | Building and testing container images | [docker.com](https://docs.docker.com/get-docker/) |
+| **GitHub CLI (`gh`)** | Release management and repository operations | [cli.github.com](https://cli.github.com/) |
+| **Git** | Version control | [git-scm.com](https://git-scm.com/) |
+
+**Note:** The build and publish process runs in GitHub Actions, so these tools are only needed for local testing and development.
 
 ## Contributing
 

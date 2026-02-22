@@ -76,7 +76,7 @@ jobs:
       - name: Create devcontainer.zip
         run: |
           cd template
-          zip -r ../devcontainer.zip .devcontainer Makefile .protodev
+          zip -r ../devcontainer.zip .devcontainer Makefile .protodev AGENTS.protodev.md .protodev.clinerules.md
           cd ..
           echo "Created devcontainer.zip with contents:"
           unzip -l devcontainer.zip
