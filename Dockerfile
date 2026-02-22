@@ -1,11 +1,11 @@
-# Dev Container Dockerfile
-# Reusable development environment with Python (uv), JavaScript (Bun/pnpm), Xpra, and Docker-in-Docker
+# Protodev Container Image
+# A reusable development environment with Python, Node.js, and comprehensive development tools.
 #
-# IMPORTANT: This file is mirrored by the Docker Compose setup
-# Any changes to features, ports, mounts, or configuration should be synchronized with:
-# - .devcontainer/devcontainer.json
-# - .devcontainer/docker-compose.yml
-# - .devcontainer/postCreateCommand.sh
+# This Dockerfile is the source of truth for building the ghcr.io/angloc/protodev image.
+# It is built by GitHub Actions and pushed to GitHub Container Registry.
+#
+# The resulting image is used by the template/.devcontainer configuration
+# which is distributed to users as devcontainer.zip.
 
 FROM python:3.12-bookworm
 
@@ -170,39 +170,22 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# ============================================
-# Bun - Fast JavaScript runtime & package manager
-# ============================================
-ENV BUN_INSTALL="/usr/local/bun"
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="$BUN_INSTALL/bin:$PATH"
+RUN npm install -g esbuild
 
 # ============================================
-# pnpm - Fallback package manager
+# Python CLI tools via uv tool
 # ============================================
-RUN npm install -g pnpm
+RUN uv tool install ruff pytest
 
 # ============================================
 # Python packages via uv (system-wide)
 # ============================================
+# Jupyter ecosystem - core development tools
 RUN uv pip install --python 3.12 --system \
-    numpy \
-    scipy \
-    matplotlib \
-    pandas \
     jupyter \
     jupyterlab \
     jupyter-ai \
-    ipykernel \
-    ruff \
-    pytest \
-    pytest-cov \
-    pytest-playwright \
-    playwright \
-    openai \
-    PyYAML \
-    Jinja2 \
-    requests
+    ipykernel
 
 # ============================================
 # Playwright browser setup (use existing Chrome)

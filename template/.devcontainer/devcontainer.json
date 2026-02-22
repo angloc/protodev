@@ -4,15 +4,11 @@
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 
-  // Docker-in-Docker is already included in the protodev image.
-  // No additional features needed.
-
   // Git authentication: VS Code automatically forwards your Git credentials (HTTPS) and SSH agent.
   // No additional mounts or configuration needed for most users.
-  // See README.md for more details on Git authentication options.
 
-  // Forward ports for VNC, noVNC, and applications
-  "forwardPorts": [8080, 6080, 5901, 8888],
+  // Forward ports for Xpra, JupyterLab, and applications
+  "forwardPorts": [8080, 14500, 8888],
 
   // VS Code Extensions
   "customizations": {
@@ -29,7 +25,6 @@
         // JavaScript/TypeScript
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "oven.bun-vscode",
         // Docker & DevOps
         "ms-azuretools.vscode-docker",
         "github.vscode-github-actions",
@@ -47,7 +42,7 @@
       ],
       "settings": {
         // Python
-        "python.defaultInterpreterPath": "/home/vscode/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.terminal.activateEnvironment": true,
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff",
@@ -82,15 +77,14 @@
 
   // Environment variables
   "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin",
-    "DISPLAY": ":1"
+    "DISPLAY": ":100"
   },
 
   // Post-create commands - run setup script
-  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
 
-  // Post-start commands - start background services (dockerd, VNC, noVNC)
-  "postStartCommand": "./.devcontainer/postStartCommand.sh",
+  // Post-start commands - start background services (dockerd, Xpra)
+  "postStartCommand": "bash .devcontainer/postStartCommand.sh",
 
   // Run as vscode user (non-root for better security)
   "remoteUser": "vscode",
@@ -101,6 +95,6 @@
     "--shm-size=2g"
   ],
   "containerEnv": {
-    "DISPLAY": ":1"
+    "DISPLAY": ":100"
   }
 }

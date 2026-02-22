@@ -63,7 +63,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: .devcontainer/Dockerfile
+          file: Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -72,20 +72,12 @@ jobs:
           # Uncomment below for multi-platform builds (slower)
           # platforms: linux/amd64,linux/arm64
 
-      # Generate template from root .devcontainer/
-      - name: Generate template
-        run: |
-          chmod +x ./.devcontainer/generate-template.sh
-          ./.devcontainer/generate-template.sh
-
-      # Create devcontainer.zip template for users
+      # Create devcontainer.zip from template folder
       - name: Create devcontainer.zip
         run: |
           cd template
           zip -r ../devcontainer.zip .devcontainer Makefile .protodev
           cd ..
-          # Add MCP servers from root directory
-          zip -r devcontainer.zip .mcp-servers
           echo "Created devcontainer.zip with contents:"
           unzip -l devcontainer.zip
 

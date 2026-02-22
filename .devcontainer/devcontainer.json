@@ -1,77 +1,22 @@
 {
-  "name": "Dev Environment",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "name": "Protodev Maintainer",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 
-  // Git authentication: VS Code automatically forwards your Git credentials (HTTPS) and SSH agent.
-  // No additional mounts or configuration needed for most users.
-  // See README.md for more details on Git authentication options.
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
 
-  // Forward ports for Xpra, JupyterLab, and applications
-  "forwardPorts": [8080, 14500, 8888],
-
-  // VS Code Extensions
   "customizations": {
     "vscode": {
       "extensions": [
-        // Python
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "charliermarsh.ruff",
-        // Jupyter
-        "ms-toolsai.jupyter",
-        "ms-toolsai.jupyter-keymap",
-        "ms-toolsai.jupyter-renderers",
-        // JavaScript/TypeScript
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "oven.bun-vscode",
-        // Docker & DevOps
         "ms-azuretools.vscode-docker",
         "github.vscode-github-actions",
-        // Git
-        "eamodio.gitlens",
-        "mhutchie.git-graph",
-        // General productivity
-        "usernamehw.errorlens",
-        "streetsidesoftware.code-spell-checker",
-        "gruntfuggly.todo-tree",
         "redhat.vscode-yaml",
-        // GitHub Copilot (if available)
-        "github.copilot",
-        "github.copilot-chat"
+        "streetsidesoftware.code-spell-checker"
       ],
       "settings": {
-        // Python
-        "python.defaultInterpreterPath": "/home/vscode/.local/share/uv/python/cpython-3.12.8-linux-x86_64-gnu/bin/python",
-        "python.terminal.activateEnvironment": true,
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff",
-          "editor.formatOnSave": true,
-          "editor.codeActionsOnSave": {
-            "source.fixAll": "explicit",
-            "source.organizeImports": "explicit"
-          }
-        },
-        // JavaScript/TypeScript
-        "[javascript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode",
-          "editor.formatOnSave": true
-        },
-        "[typescript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode",
-          "editor.formatOnSave": true
-        },
-        "[json]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        // Terminal
-        "terminal.integrated.defaultProfile.linux": "bash",
-        // Editor
         "editor.tabSize": 2,
         "editor.insertSpaces": true,
         "files.trimTrailingWhitespace": true,
@@ -80,27 +25,7 @@
     }
   },
 
-  // Environment variables
-  "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/usr/local/bun/bin",
-    "DISPLAY": ":100"
-  },
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
 
-  // Post-create commands - run setup script
-  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
-
-  // Post-start commands - start background services (dockerd, Xpra)
-  "postStartCommand": "./.devcontainer/postStartCommand.sh",
-
-  // Run as vscode user (non-root for better security)
-  "remoteUser": "vscode",
-
-  // Container settings for Docker-in-Docker and Chrome
-  "runArgs": [
-    "--privileged",
-    "--shm-size=2g"
-  ],
-  "containerEnv": {
-    "DISPLAY": ":100"
-  }
+  "remoteUser": "vscode"
 }

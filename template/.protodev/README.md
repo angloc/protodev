@@ -8,12 +8,10 @@ This template provides a **Linux development container** that runs on any host (
 
 **Key features:**
 - **Python 3.12** with uv package manager
-- **Node.js 22 LTS** with npm/pnpm
-- **Bun** JavaScript runtime
+- **Node.js 22 LTS** with npm
 - **Docker-in-Docker** — build and run containers inside the dev container
-- **VNC/noVNC** — graphical applications and browser automation
+- **Xpra HTML5** — graphical applications and browser automation
 - **Comprehensive CLI tools** — search, data processing, GitHub integration
-- **MCP server support** — extend AI coding assistants with custom tools
 
 ---
 
@@ -41,13 +39,14 @@ Remove-Item devcontainer.zip
 
 ### Step 2: Customise for Your Project
 
-After extracting the template, you may choose to pin it for your project:
+After extracting the template, you may choose to customise it for your project:
 
 1. **Add dependencies:**
    - Create `requirements.txt` in your project root for Python packages
    - Create `package.json` in your project root for Node.js packages
-   - the postCreateCommand.sh will install these when the container is (re)built
-1. **Pin a specific container version:**
+   - The `postCreateCommand.sh` will install these when the container is (re)built
+
+2. **Pin a specific container version:**
    Edit `.devcontainer/devcontainer.json` to use a specific tag instead of `latest`:
    ```json
    {
@@ -55,14 +54,10 @@ After extracting the template, you may choose to pin it for your project:
    }
    ```
 
-1. **Configure VS Code extensions:**
+3. **Configure VS Code extensions:**
    Add/remove extensions in `.devcontainer/devcontainer.json` → `customizations.vscode.extensions`
 
-1. **Set up MCP servers:**
-   The `.mcp-servers/` directory is included with an example server. Create your own MCP servers here and register them in `.mcp-servers/cline-config.json`. MCP servers are installed when you startup your container.
-
-
-### Step 2: Choose Your Workflow
+### Step 3: Choose Your Workflow
 
 #### Option A: VS Code Dev Containers (Recommended)
 
@@ -119,8 +114,7 @@ docker compose -f .devcontainer/docker-compose.yml down
 | Tool | Version | Description |
 |------|---------|-------------|
 | Python | 3.12 | Primary language with uv package manager |
-| Node.js | 22 LTS | JavaScript runtime with npm, pnpm |
-| Bun | Latest | Fast JavaScript runtime & package manager |
+| Node.js | 22 LTS | JavaScript runtime with npm |
 
 ### Pre-installed Python Packages
 
@@ -128,25 +122,16 @@ These are baked into the `ghcr.io/angloc/protodev` image:
 
 | Package | Purpose |
 |---------|---------|
-| numpy, scipy, pandas, matplotlib | Scientific computing & visualization |
 | jupyter, jupyterlab, jupyter-ai | Interactive notebooks |
 | ipykernel | Jupyter kernel support |
 | ruff | Fast Python linter & formatter |
-| pytest, pytest-cov, pytest-playwright | Testing framework |
-| playwright | Browser automation |
-| openai | OpenAI API client |
-| PyYAML | YAML processing |
-| Jinja2 | Template engine |
-| requests | legacy HTTP client |
-| httpx | modern HTTP client |
+| pytest | Testing framework |
 
 ### Pre-installed Node.js Tools
 
 | Tool | Purpose |
 |------|---------|
 | esbuild | Fast JavaScript bundler |
-| prettier | Code formatter |
-| TypeScript | Type-safe JavaScript |
 
 ### CLI Tools
 
@@ -164,14 +149,14 @@ These are baked into the `ghcr.io/angloc/protodev` image:
 | `sqlite3` | SQLite database CLI |
 | `ffmpeg` | Video/audio processing |
 | `gm` (GraphicsMagick) | Image processing and conversion |
+| `uv` / `uvx` | Fast Python package installer and runner |
 
-### GUI Applications (via VNC)
+### GUI Applications
 
 | Tool | Purpose |
-|------|---------|
+|------|-------------|
 | Google Chrome | Browser automation and testing (use `--no-sandbox --disable-gpu`) |
-| Fluxbox | Lightweight window manager |
-| noVNC | Browser-based VNC access at http://localhost:6080 |
+| Xpra | HTML5 virtual desktop for GUI applications |
 
 ### VS Code Extensions
 
@@ -180,24 +165,11 @@ These are baked into the `ghcr.io/angloc/protodev` image:
 | ms-python.python, vscode-pylance, ruff | Python development |
 | ms-toolsai.jupyter | Jupyter notebooks |
 | dbaeumer.vscode-eslint, prettier-vscode | JavaScript/TypeScript |
-| oven.bun-vscode | Bun support |
 | ms-azuretools.vscode-docker | Docker integration |
 | github.vscode-github-actions | GitHub Actions |
 | eamodio.gitlens, mhutchie.git-graph | Git tooling |
 | github.copilot, github.copilot-chat | AI assistance |
 | And more... | See `devcontainer.json` for full list |
-
-### MCP Servers (Model Context Protocol)
-
-The `.mcp-servers/` directory contains:
-
-| Component | Description |
-|-----------|-------------|
-| `cline-config.json` | MCP server configuration for Cline |
-| `example-server/` | Template MCP server with tools and resources |
-| `README.md` | Documentation for creating MCP servers |
-
-MCP servers extend AI coding assistants (like Cline) with custom capabilities. They are automatically built during container startup.
 
 ---
 
@@ -206,8 +178,7 @@ MCP servers extend AI coding assistants (like Cline) with custom capabilities. T
 | Port | Service | Access |
 |------|---------|--------|
 | 8080 | Application server | Forwarded to host automatically |
-| 6080 | noVNC web interface | http://localhost:6080 (password: `vscode`) |
-| 5901 | VNC server | VNC client to localhost:5901 |
+| 14500 | Xpra HTML5 virtual desktop | http://localhost:14500 |
 | 8888 | JupyterLab | Forwarded but not auto-started in DevContainer mode |
 
 ---
@@ -250,76 +221,13 @@ docker run -d -p 3000:3000 --name myapp myimage
 - DevContainer mode: Port 3000 is automatically forwarded to `localhost:3000` on your host
 - Docker Compose mode: Add port mapping to `docker-compose.yml` or use `docker run -p`
 
-### Example: Multiple Ports
-
-```bash
-# Inner container exposing multiple ports
-docker run -d \
-  -p 3000:3000 \
-  -p 8080:8080 \
-  -p 5432:5432 \
-  --name myapp \
-  myimage
-```
-
-### Exposing to External Networks (Beyond Localhost)
-
-To make your application accessible from other machines on your network:
-
-#### Step 1: Bind to 0.0.0.0 in the inner container
-
-```bash
-# Ensure your application listens on all interfaces, not just localhost
-# This is typically the default, but some frameworks default to 127.0.0.1
-
-# Example: Node.js
-node server.js --host 0.0.0.0
-
-# Example: Python Flask
-flask run --host=0.0.0.0
-
-# Example: Docker container
-docker run -p 0.0.0.0:3000:3000 myimage
-```
-
-#### Step 2: Configure host firewall
-
-**Windows:**
-```powershell
-# Allow inbound connections on port 3000
-New-NetFirewallRule -DisplayName "DevContainer Port 3000" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
-```
-
-**macOS:**
-System Preferences → Security & Privacy → Firewall → Firewall Options → Add rule
-
-**Linux:**
-```bash
-sudo ufw allow 3000/tcp
-# or
-sudo iptables -A INPUT -p tcp --dport 3000 -j ACCEPT
-```
-
-#### Step 3: Access from external machines
-
-Find your host's IP address:
-```bash
-# Windows
-ipconfig
-
-# macOS/Linux
-ifconfig  # or ip addr
-```
-
-Other machines can now access: `http://YOUR_HOST_IP:3000`
-
 ### Docker Compose vs DevContainer Differences
 
 | Feature | DevContainer Mode | Docker Compose Mode |
 |---------|-------------------|---------------------|
 | Port forwarding | Automatic via VS Code | Explicit in `docker-compose.yml` |
 | Docker-in-Docker | Works via postStartCommand | Works via entrypoint |
-| VNC/noVNC | Started via postStartCommand | Started via entrypoint |
+| Xpra | Started via postStartCommand | Started via entrypoint |
 | Jupyter | Manual start | Auto-started via jupyter service |
 
 ---
@@ -386,7 +294,7 @@ For reproducible builds, pin to a specific version in `.devcontainer/devcontaine
 
 Available tags:
 - `latest` — Latest main branch build
-- `v1.0.0` — Semantic version (see repo for current details)
+- `1.0.0` — Semantic version (see repo for current details)
 - `sha-abc1234` — Specific commit
 
 ### Git Authentication
@@ -424,50 +332,6 @@ git ls-remote https://github.com/your-username/your-repo.git
 ssh -T git@github.com
 ```
 
-### AI Coding Assistants
-
-The `postCreateCommand.sh` includes commented-out installation scripts for:
-
-| Tool | Provider | Requirement |
-|------|----------|-------------|
-| Cline CLI | — | Terminal AI assistant |
-| Claude Code | Anthropic | `ANTHROPIC_API_KEY` env var |
-| OpenAI Codex | OpenAI | `OPENAI_API_KEY` env var |
-| Open Code | Open-source | Provider API key |
-| Google Antigravity | Google | Google account auth |
-| Google Conductor | Google | Google Cloud auth |
-
-Uncomment the ones you want to use in `.devcontainer/postCreateCommand.sh` and ensure you have the required API keys.
-
-### MCP Servers
-
-The `.mcp-servers/` directory is included with this template. It contains:
-
-1. **Example server** (`example-server/`) — A template MCP server
-2. **Cline config** (`cline-config.json`) — Register your MCP servers here
-3. **Documentation** (`README.md`) — How to create and register MCP servers
-
-MCP servers are automatically built during container startup. To create a new one:
-
-```bash
-cd /workspace/.mcp-servers
-npx @modelcontextprotocol/create-server my-server
-cd my-server && npm install && npm run build
-```
-
-Then register it in `cline-config.json`:
-
-```json
-{
-  "mcpServers": {
-    "my-server": {
-      "command": "node",
-      "args": ["/workspace/.mcp-servers/my-server/build/index.js"]
-    }
-  }
-}
-```
-
 ---
 
 ## Running Multiple Projects
@@ -480,19 +344,19 @@ This allows you to run multiple projects simultaneously. If you have port confli
 ```yaml
 ports:
   - "8081:8080"  # Map container 8080 to host 8081
-  - "6081:6080"
-  - "5902:5901"
+  - "14501:14500"  # Map Xpra to different port
+  - "8889:8888"  # Map Jupyter to different port
 ```
 
 ---
 
-## VNC / GUI Access
+## Xpra / GUI Access
 
-Access the virtual desktop at http://localhost:6080/vnc.html (password: `vscode`)
+Access the virtual desktop at http://localhost:14500
 
 Run Chrome:
 ```bash
-google-chrome --no-sandbox --disable-gpu
+google-chrome --no-sandbox --disable-gpu &
 ```
 
 Or run Chrome headless for automation:
@@ -521,30 +385,6 @@ docker info
 
 If not, the `postStartCommand.sh` (DevContainer) or entrypoint (Docker Compose) should have started it. Check the startup logs.
 
-### VNC Not Working
-
-Access via browser: http://localhost:6080/vnc.html (password: `vscode`)
-
-Check VNC server status inside the container:
-```bash
-vncserver -list
-cat ~/.vnc/*:1.log
-```
-
-### Chrome Crashes
-
-Run with additional flags:
-```bash
-google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage
-```
-
-### Permission Issues
-
-The container runs as `vscode` user with sudo access:
-```bash
-sudo <command>
-```
-
 ---
 
 ## Container Registry
@@ -553,8 +393,8 @@ Images are published to GitHub Container Registry:
 
 ```
 ghcr.io/angloc/protodev:latest       # Latest main branch
-ghcr.io/angloc/protodev:1.0.0      # Semantic version
-ghcr.io/angloc/protodev:sha-abc123 # Specific commit
+ghcr.io/angloc/protodev:1.0.0        # Semantic version
+ghcr.io/angloc/protodev:sha-abc123   # Specific commit
 ```
 
 Pull directly:
@@ -564,8 +404,41 @@ docker pull ghcr.io/angloc/protodev:latest
 
 ---
 
+## AI Assistant Configuration
+
+This template includes agent instruction files that help AI assistants (like Cline, GitHub Copilot, etc.) understand and optimally utilize the development environment:
+
+- **`AGENTS.protodev.md`** — Instructions for AI agents about the protodev environment
+- **`.protodev.clinerules.md`** — Rules for Cline-specific AI assistants
+
+### Setting Up AI Assistant Instructions
+
+After extracting the template, incorporate these instructions into your project:
+
+**For AGENTS.md (general AI agent support):**
+
+1. If you already have an `AGENTS.md` file in your project root, add this content:
+   ```markdown
+   # Protodev Development Environment
+
+   This project uses the protodev Docker development environment.
+
+   **Read .protodev/README.md for complete development environment documentation.**
+   ```
+
+2. If you don't have an `AGENTS.md` file, rename `AGENTS.protodev.md` to `AGENTS.md` and place it in your project root.
+
+**For .clinerules (Cline-specific support):**
+
+1. If you already have a `.clinerules` file, prepend the contents of `.protodev.clinerules.md` to it.
+
+2. If you don't have a `.clinerules` file, rename `.protodev.clinerules.md` to `.clinerules` and place it in your project root.
+
+This ensures AI assistants working on your project will understand the development environment and provide contextually appropriate assistance.
+
+---
+
 ## More Information
 
 - **Repository:** https://github.com/angloc/protodev
-- **MCP Documentation:** `.mcp-servers/README.md`
 - **Contributing:** See CONTRIBUTING.md in the main repository
