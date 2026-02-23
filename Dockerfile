@@ -28,6 +28,18 @@ RUN useradd -m -s /bin/bash vscode \
     && chown -R vscode:vscode /workspace
 
 # ============================================
+# Sudo configuration for vscode user
+# ============================================
+# VS Code Dev Containers automatically configures sudo for non-root users,
+# but Docker Compose mode does not. We configure sudo explicitly here to ensure
+# the vscode user has passwordless sudo access in both DevContainer and
+# Docker Compose modes, providing a consistent experience across workflows.
+RUN apt-get update && apt-get install -y --no-install-recommends sudo \
+    && echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
+    && chmod 0440 /etc/sudoers.d/vscode \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================
 # System packages and CLI tools
 # ============================================
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -64,39 +64,6 @@ EOF
     fi
 fi
 
-# ============================================
-# MCP Servers (Model Context Protocol)
-# ============================================
-# Build MCP servers for use with Cline and other MCP-compatible tools
-if [ -d ./.mcp-servers ]; then
-    echo "Building MCP servers..."
-    for server_dir in ./.mcp-servers/*/; do
-        if [ -f "${server_dir}package.json" ]; then
-            server_name=$(basename "$server_dir")
-            echo "  Building MCP server: $server_name"
-            (cd "$server_dir" && npm install --silent && npm run build --silent 2>/dev/null || true)
-        fi
-    done
-    echo "✅ MCP servers built"
-fi
-
-# ============================================
-# Project Dependencies
-# ============================================
-# Install Python packages from requirements.txt if present
-if [ -f ./requirements.txt ]; then
-    echo "Installing Python dependencies from requirements.txt..."
-    uv pip install --system -r ./requirements.txt
-    echo "✅ Python dependencies installed"
-fi
-
-# Install Node.js packages from package.json if present
-if [ -f ./package.json ]; then
-    echo "Installing Node.js dependencies..."
-    npm install --silent
-    echo "✅ Node.js dependencies installed"
-fi
-
 echo ""
 echo "✅ Development environment ready!"
 echo ""

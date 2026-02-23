@@ -41,12 +41,7 @@ Remove-Item devcontainer.zip
 
 After extracting the template, you may choose to customise it for your project:
 
-1. **Add dependencies:**
-   - Create `requirements.txt` in your project root for Python packages
-   - Create `package.json` in your project root for Node.js packages
-   - The `postCreateCommand.sh` will install these when the container is (re)built
-
-2. **Pin a specific container version:**
+1. **Pin a specific container version:**
    Edit `.devcontainer/devcontainer.json` to use a specific tag instead of `latest`:
    ```json
    {
@@ -54,7 +49,7 @@ After extracting the template, you may choose to customise it for your project:
    }
    ```
 
-3. **Configure VS Code extensions:**
+2. **Configure VS Code extensions:**
    Add/remove extensions in `.devcontainer/devcontainer.json` → `customizations.vscode.extensions`
 
 ### Step 3: Choose Your Workflow
@@ -255,32 +250,6 @@ docker run -d -p 3000:3000 --name myapp myimage
 ---
 
 ## Customisation
-
-### Project Dependencies
-
-Add a `requirements.txt` to your project root for Python packages:
-
-```txt
-# requirements.txt
-scikit-learn
-torch
-transformers
-```
-
-Add a `package.json` for Node.js packages:
-
-```json
-{
-  "dependencies": {
-    "express": "^4.18.0"
-  },
-  "devDependencies": {
-    "vitest": "^1.0.0"
-  }
-}
-```
-
-These are installed automatically when the container starts via `postCreateCommand.sh`.
 
 ### Pin Container Version
 
