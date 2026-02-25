@@ -248,7 +248,13 @@ RUN git config --global --add safe.directory '*' \
 # Bash aliases for development convenience
 RUN echo '' >> /home/vscode/.bashrc \
     && echo '# protodev aliases' >> /home/vscode/.bashrc \
-    && echo "alias chrome-xpra='DISPLAY=:100 google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage --no-first-run --disable-sync --new-window'" >> /home/vscode/.bashrc \
+    && echo "# Source DBus session bus address written by postStartCommand.sh" >> /home/vscode/.bashrc \
+    && echo "[ -f ~/.xpra/dbus-env ] && source ~/.xpra/dbus-env" >> /home/vscode/.bashrc \
+    && echo "# chrome-xpra: launch Chrome on the Xpra virtual display" >> /home/vscode/.bashrc \
+    && echo "# - sources dbus-env so Chrome can connect to the session bus (fixes keystroke lag)" >> /home/vscode/.bashrc \
+    && echo "# - --disable-background-networking suppresses GCM/push registration errors" >> /home/vscode/.bashrc \
+    && echo "# - --window-size gives Chrome a sensible initial size to fit the HTML5 client" >> /home/vscode/.bashrc \
+    && echo "alias chrome-xpra='source ~/.xpra/dbus-env 2>/dev/null; DISPLAY=:100 google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage --no-first-run --disable-sync --disable-background-networking --window-size=1280,800'" >> /home/vscode/.bashrc \
     && echo "alias g1='git log -1 --oneline'" >> /home/vscode/.bashrc \
     && echo "alias g5='git log -5 --oneline'" >> /home/vscode/.bashrc \
     && echo "alias g10='git log -10 --oneline'" >> /home/vscode/.bashrc \
