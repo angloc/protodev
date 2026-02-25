@@ -15,7 +15,12 @@ echo "🚀 Starting background services..."
 # ============================================
 # Start Xpra (GUI application streaming)
 # ============================================
-if ! pgrep -x "xpra" > /dev/null; then
+if ! command -v xpra &>/dev/null; then
+    echo "⚠️  xpra is not installed — skipping GUI streaming startup"
+    echo "   To use GUI apps, rebuild the container image so xpra can be installed."
+elif pgrep -x "xpra" > /dev/null; then
+    echo "✅ Xpra already running"
+else
     echo "Starting Xpra HTML5 server..."
     mkdir -p /home/vscode/.xpra
     # Set XDG_RUNTIME_DIR to avoid "not defined" warning
@@ -29,8 +34,6 @@ if ! pgrep -x "xpra" > /dev/null; then
         --log-file=/home/vscode/.xpra/xpra.log
     sleep 2
     echo "✅ Xpra started on port 14500"
-else
-    echo "✅ Xpra already running"
 fi
 
 echo ""
@@ -41,6 +44,6 @@ echo "  • Docker daemon     - unix:///var/run/docker.sock"
 echo "  • Xpra HTML5        - http://localhost:14500"
 echo ""
 echo "To start a GUI application with Xpra:"
-echo "  chrome &"
+echo "  chrome-xpra &"
 echo "  Then connect via http://localhost:14500"
 echo ""

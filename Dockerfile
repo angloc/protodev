@@ -237,5 +237,23 @@ WORKDIR /workspace
 # Switch to vscode user
 USER vscode
 
+# ============================================
+# vscode user configuration
+# ============================================
+# Git: trust all directories (needed when workspace is mounted from host)
+# and normalise line endings on checkout
+RUN git config --global --add safe.directory '*' \
+    && git config --global core.autocrlf input
+
+# Bash aliases for development convenience
+RUN echo '' >> /home/vscode/.bashrc \
+    && echo '# protodev aliases' >> /home/vscode/.bashrc \
+    && echo "alias chrome-xpra='DISPLAY=:100 google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage --no-first-run --disable-sync --new-window'" >> /home/vscode/.bashrc \
+    && echo "alias g1='git log -1 --oneline'" >> /home/vscode/.bashrc \
+    && echo "alias g5='git log -5 --oneline'" >> /home/vscode/.bashrc \
+    && echo "alias g10='git log -10 --oneline'" >> /home/vscode/.bashrc \
+    && echo "alias g20='git log -20 --oneline'" >> /home/vscode/.bashrc \
+    && echo "alias lab='PYTHONPATH=\"\$(pwd)\${PYTHONPATH:+:\$PYTHONPATH}\" jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=\"\$(pwd)\"'" >> /home/vscode/.bashrc
+
 # Default command
 CMD ["bash"]

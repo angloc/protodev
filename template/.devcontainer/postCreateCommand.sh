@@ -3,65 +3,23 @@
 # postCreateCommand.sh - Runtime setup for development environment
 #
 # This script runs when the container is first created.
-# It configures the environment for development work.
+# Git configuration, bash aliases and environment variables are baked into
+# the image (see Dockerfile). This script handles only tasks that require
+# a running container with host resources mounted.
 
 set -e
 
 echo "🚀 Running postCreateCommand.sh..."
 
 # ============================================
-# Git Configuration
-# ============================================
-# Avoid problems with ownership by container versus host user
-git config --global --add safe.directory '*'
-
-# Avoid problems with line endings (especially on Windows)
-git config --global core.autocrlf input
-
-echo "✅ Git configured"
-
-# ============================================
-# Git Authentication
-# ============================================
-# VS Code automatically forwards Git credentials (HTTPS) and SSH agent.
-# No manual SSH key setup required for most users.
-# See README.md for more details on Git authentication options.
-echo "✅ Git authentication: using VS Code's automatic credential forwarding"
-
-# ============================================
 # Docker Socket Permissions
 # ============================================
-# Ensure the Docker daemon socket is available to the vscode user
+# The Docker daemon socket is created at runtime and must be made accessible
+# to the vscode user. This cannot be done at image-build time.
 if [ -e /var/run/docker.sock ]; then
     sudo chown root:docker /var/run/docker.sock 2>/dev/null || true
     sudo chmod 660 /var/run/docker.sock 2>/dev/null || true
     echo "✅ Docker socket configured"
-fi
-sudo usermod -aG docker vscode 2>/dev/null || true
-
-# ============================================
-# Environment Variables
-# ============================================
-export PYTHONDONTWRITEBYTECODE=1
-
-# ============================================
-# Useful Aliases
-# ============================================
-if [ -f ~/.bashrc ]; then
-    if ! grep -q "^# protodev aliases" ~/.bashrc 2>/dev/null; then
-        cat <<'EOF' >> ~/.bashrc
-
-# protodev aliases
-alias chrome-xpra='DISPLAY=:100 google-chrome --no-sandbox --disable-gpu --disable-dev-shm-usage --no-first-run --disable-sync --new-window'
-alias g1='git log -1 --oneline'
-alias g5='git log -5 --oneline'
-alias g10='git log -10 --oneline'
-alias g20='git log -20 --oneline'
-EOF
-        echo "✅ Added protodev aliases to ~/.bashrc"
-    else
-        echo "✅ protodev aliases already present in ~/.bashrc"
-    fi
 fi
 
 echo ""
@@ -76,7 +34,7 @@ echo "  • Google Chrome       • Xpra (GUI apps)"
 echo "  • JupyterLab          • DuckDB"
 echo ""
 echo "Ports:"
-echo "  • 8080 - Application server"
+echo "  • 8080  - Application server"
 echo "  • 14500 - Xpra HTML5 web interface"
-echo "  • 8888 - JupyterLab"
+echo "  • 8888  - JupyterLab"
 echo ""
