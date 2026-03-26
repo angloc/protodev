@@ -5,6 +5,8 @@
 # - make utility
 # - Docker Compose (via Docker Desktop, Podman, or Rancher Desktop)
 # - Windows: WSL (Windows Subsystem for Linux)
+#
+# Note: The container uses Podman internally (rootless). Host can use any runtime.
 
 services:
   dev:
@@ -21,9 +23,6 @@ services:
       # - ${HOME}/.ssh:/home/vscode/.ssh:ro          # Linux/Mac
       # - ${USERPROFILE}/.ssh:/home/vscode/.ssh:ro   # Windows
 
-      # Docker-in-Docker volume
-      - docker-dind-data:/var/lib/docker
-
     # Port mappings
     ports:
       - "8080:8080"   # Application server
@@ -33,13 +32,10 @@ services:
     # Working directory
     working_dir: /workspace
 
-    # Docker-in-Docker requires privileged mode
-    privileged: true
-    init: true
+    # Privileged mode required for running Podman containers inside the devcontainer
     # Increase shared memory to prevent Chrome crashes
+    privileged: true
     shm_size: '2gb'
-    security_opt:
-      - seccomp:unconfined
 
     # Run postCreateCommand.sh on startup, then start services
     entrypoint: ["/bin/bash", "-c"]
@@ -69,10 +65,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DISPLAY=:100
 
-    # Ensure proper permissions for Docker socket
     user: vscode
-    group_add:
-      - docker
 
   jupyter:
     image: ghcr.io/angloc/protodev:latest
@@ -93,8 +86,6 @@ services:
 
     working_dir: /workspace
     privileged: true
-    security_opt:
-      - seccomp:unconfined
 
     entrypoint: ["/bin/bash", "-c"]
     command:
@@ -114,12 +105,6 @@ services:
       - PYTHONUNBUFFERED=1
 
     user: vscode
-    group_add:
-      - docker
 
     depends_on:
       - dev
-
-# Docker-in-Docker volume
-volumes:
-  docker-dind-data:

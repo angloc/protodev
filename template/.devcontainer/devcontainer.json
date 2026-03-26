@@ -89,7 +89,9 @@
   // Run as vscode user (non-root for better security)
   "remoteUser": "vscode",
 
-  // Container settings for Docker-in-Docker and Chrome
+  // Container settings for Podman and Chrome
+  // Note: --privileged is required for running Podman containers inside the devcontainer
+  // This allows the vscode user to run docker/podman commands
   "runArgs": [
     "--privileged",
     "--shm-size=2g"

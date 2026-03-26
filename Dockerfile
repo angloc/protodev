@@ -107,21 +107,35 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
-# Docker CE (for Docker-in-Docker support)
+# Podman (rootless container runtime)
 # ============================================
+# Podman provides a Docker-compatible CLI without requiring a daemon.
+# The podman-docker package provides 'docker' as an alias to 'podman'.
+# This enables rootless containers without privileged mode.
+# Debian 12 (bookworm) includes Podman in its standard repositories.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
+    podman \
+    podman-docker \
+    crun \
+    uidmap \
     && rm -rf /var/lib/apt/lists/*
 
-# Ensure 'docker' group exists and add vscode to it
-RUN groupadd -f docker && usermod -aG docker vscode
+# Configure Podman to use crun (lighter runtime) by default
+RUN mkdir -p /etc/containers \
+    && printf '[engine]\nruntime = "crun"\n' > /etc/containers/containers.conf
+
+# Configure subuid and subgid for rootless Podman
+# This allows the vscode user to run containers without root privileges
+RUN echo "vscode:100000:65536" >> /etc/subuid \
+    && echo "vscode:100000:65536" >> /etc/subgid
+
+# Create Podman configuration directory for vscode user
+RUN mkdir -p /home/vscode/.config/containers \
+    && chown -R vscode:vscode /home/vscode/.config
+
+# Create storage directory for rootless podman and set permissions
+RUN mkdir -p /home/vscode/.local/share/containers \
+    && chown -R vscode:vscode /home/vscode/.local
 
 # ============================================
 # yq - YAML processor

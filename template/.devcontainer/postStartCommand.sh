@@ -5,8 +5,7 @@
 # This script runs after the container is created and VS Code connects.
 # It starts background services that are needed in DevContainer mode.
 #
-# Note: Docker-in-Docker daemon is handled automatically by the devcontainer
-# infrastructure or docker-compose entrypoint - no manual startup needed.
+# Note: Podman is daemonless and doesn't require a background service.
 
 set -e
 
@@ -63,7 +62,7 @@ echo ""
 echo "✅ Background services started!"
 echo ""
 echo "Services available:"
-echo "  • Docker daemon     - unix:///var/run/docker.sock"
+echo "  • Podman (docker)   - daemonless container runtime (use 'docker' or 'podman')"
 echo "  • Xpra HTML5        - http://localhost:14500"
 echo ""
 echo "To start a GUI application with Xpra:"

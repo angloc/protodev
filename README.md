@@ -1,6 +1,6 @@
-# Protodev - Docker Development Environment
+# Protodev - Container Development Environment
 
-This repository builds and publishes a standardized Docker development environment container. The container image provides Python, Node.js, and comprehensive development tools that can be used across many projects.
+This repository builds and publishes a standardized development environment container. The container image provides Python, Node.js, and comprehensive development tools that can be used across many projects.
 
 ## Repository Purpose
 
@@ -125,19 +125,29 @@ Pull directly:
 docker pull ghcr.io/angloc/protodev:latest
 ```
 
+## Container Runtime
+
+The development container uses **Podman** instead of Docker:
+
+- **Rootless by default** - More secure, no privileged mode required
+- **Daemonless** - No background service needed
+- **Docker-compatible CLI** - The `podman-docker` package provides a `docker` alias
+
+Users can run `docker` commands as usual; they're transparently handled by Podman.
+
 ## Development Environment for This Repo
 
 This repository has a minimal `.devcontainer` for maintainers. It provides:
 - GitHub CLI (`gh`) for release management
 - Git for version control
-- Docker (Docker-in-Docker) for local testing
+- Container runtime (Podman or Docker) for local testing
 
 ### Using the Dev Container (Recommended)
 
 To use the dev container:
 1. Open in VS Code
 2. When prompted, reopen in container
-3. Docker and all necessary tools will be automatically available
+3. Podman and all necessary tools will be automatically available
 
 ### Working Without the Dev Container
 
@@ -145,7 +155,7 @@ If you prefer not to use the dev container, ensure you have the following prereq
 
 | Tool | Purpose | Installation |
 |------|---------|--------------|
-| **Docker** | Building and testing container images | [docker.com](https://docs.docker.com/get-docker/) |
+| **Docker or Podman** | Building and testing container images | [docker.com](https://docs.docker.com/get-docker/) or [podman.io](https://podman.io/) |
 | **GitHub CLI (`gh`)** | Release management and repository operations | [cli.github.com](https://cli.github.com/) |
 | **Git** | Version control | [git-scm.com](https://git-scm.com/) |
 
