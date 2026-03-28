@@ -23,7 +23,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
+      image_tag: ${{ steps.get-tag.outputs.image_tag }}
 
     steps:
       - name: Checkout repository
@@ -49,6 +49,13 @@ jobs:
             type=ref,event=pr
             # Short SHA for all builds
             type=sha
+
+      - name: Get first image tag
+        id: get-tag
+        run: |
+          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "Using image tag: ${IMAGE_TAG}"
 
       - name: Build container image
         uses: docker/build-push-action@v5
@@ -99,7 +106,7 @@ jobs:
             -e PYTHONDONTWRITEBYTECODE=1 \
             -e PYTHONUNBUFFERED=1 \
             --workdir /workspace \
-            protodev-test \
+            ${{ needs.build.outputs.image_tag }} \
             bash -c 'bash /workspace/.devcontainer/postStartCommand.sh && tail -f /dev/null'
 
       - name: Wait for container startup
