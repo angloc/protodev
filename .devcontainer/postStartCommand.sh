@@ -4,6 +4,7 @@
 #
 # This script runs when the container starts. It handles all runtime tasks
 # that cannot be baked into the image:
+# - Workspace permissions (if mounted from host)
 # - Docker socket permissions (if mounted from host)
 # - DBus session bus (required for Chrome input handling)
 # - Xpra HTML5 server (for GUI applications)
@@ -17,6 +18,15 @@
 set -e
 
 echo "🚀 Starting development container services..."
+
+# ============================================
+# Workspace Permissions
+# ============================================
+# When the working directory is mounted from the host (CI or local dev),
+# it may be owned by root or another user. Fix ownership so vscode user
+# can write to it.
+sudo chown -R vscode:vscode "$PWD" 2>/dev/null || true
+echo "✅ Workspace permissions configured"
 
 # ============================================
 # Docker Socket Permissions
