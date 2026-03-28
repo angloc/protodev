@@ -107,35 +107,36 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
-# Podman (rootless container runtime)
+# Docker CE (container runtime)
 # ============================================
-# Podman provides a Docker-compatible CLI without requiring a daemon.
-# The podman-docker package provides 'docker' as an alias to 'podman'.
-# This enables rootless containers without privileged mode.
-# Debian 12 (bookworm) includes Podman in its standard repositories.
+# Docker CE provides the container runtime for building and running containers.
+# The container will use the host's Docker socket via volume mount.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    podman \
-    podman-docker \
-    crun \
-    uidmap \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure Podman to use crun (lighter runtime) by default
-RUN mkdir -p /etc/containers \
-    && printf '[engine]\nruntime = "crun"\n' > /etc/containers/containers.conf
+# Add Docker's official GPG key and repository
+RUN install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" > /etc/apt/sources.list.d/docker.list
 
-# Configure subuid and subgid for rootless Podman
-# This allows the vscode user to run containers without root privileges
-RUN echo "vscode:100000:65536" >> /etc/subuid \
-    && echo "vscode:100000:65536" >> /etc/subgid
+# Install Docker CE, CLI, and Compose plugin
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create Podman configuration directory for vscode user
-RUN mkdir -p /home/vscode/.config/containers \
-    && chown -R vscode:vscode /home/vscode/.config
-
-# Create storage directory for rootless podman and set permissions
-RUN mkdir -p /home/vscode/.local/share/containers \
-    && chown -R vscode:vscode /home/vscode/.local
+# Add vscode user to docker group for socket access
+RUN groupadd -f docker \
+    && usermod -aG docker vscode
 
 # ============================================
 # yq - YAML processor
@@ -223,6 +224,22 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # ============================================
+# Playwright for browser automation and API testing
+# ============================================
+# Playwright is pre-installed for functional/black-box testing.
+# It supports both browser automation (using system Chrome) and API testing.
+# Tests run in the development environment, outside the application context.
+RUN uv pip install --python 3.12 --system playwright \
+    && playwright install chromium
+
+# ============================================
+# HTTPie - Command-line HTTP client
+# ============================================
+# HTTPie provides a user-friendly alternative to curl for API exploration.
+# Useful for ad-hoc testing and debugging during development.
+RUN uv pip install --python 3.12 --system httpie
+
+# ============================================
 # Configure fzf for bash
 # ============================================
 RUN echo '[ -f /opt/fzf/shell/key-bindings.bash ] && source /opt/fzf/shell/key-bindings.bash' >> /etc/bash.bashrc \
@@ -273,7 +290,8 @@ RUN echo '' >> /home/vscode/.bashrc \
     && echo "alias g5='git log -5 --oneline'" >> /home/vscode/.bashrc \
     && echo "alias g10='git log -10 --oneline'" >> /home/vscode/.bashrc \
     && echo "alias g20='git log -20 --oneline'" >> /home/vscode/.bashrc \
-    && echo "alias lab='PYTHONPATH=\"\$(pwd)\${PYTHONPATH:+:\$PYTHONPATH}\" jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=\"\$(pwd)\"'" >> /home/vscode/.bashrc
+    && echo "alias lab='PYTHONPATH=\"\$(pwd)\${PYTHONPATH:+:\$PYTHONPATH}\" jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=\"\$(pwd)\" --IdentityProvider.token=\"\" --IdentityProvider.password_required=False > /tmp/jupyter.log 2>&1 & echo \$! > /tmp/jupyter.pid; echo \"JupyterLab starting on port 8888 (PID \$(cat /tmp/jupyter.pid))... log: /tmp/jupyter.log\"'" >> /home/vscode/.bashrc \
+    && echo "alias labstop='[ -f /tmp/jupyter.pid ] && kill \$(cat /tmp/jupyter.pid) 2>/dev/null && rm -f /tmp/jupyter.pid || pkill -f jupyter 2>/dev/null || true; echo \"JupyterLab stopped\"'" >> /home/vscode/.bashrc
 
 # Default command
 CMD ["bash"]

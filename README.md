@@ -2,33 +2,54 @@
 
 This repository builds and publishes a standardized development environment container. The container image provides Python, Node.js, and comprehensive development tools that can be used across many projects.
 
-## Repository Purpose
+## For Project Users
 
-This is a **build and publish repository**, not a consumer of its own product. It maintains:
+> **If you're looking to use protodev in your project, you're in the wrong place!**
+
+This is the **build repository** for maintainers. To use protodev in your project:
+
+1. **Download the template** from [releases](https://github.com/angloc/protodev/releases/latest)
+2. **Extract to your project** root directory
+3. **Read the documentation** at `.devcontainer/README.md` after extraction
+
+For complete usage instructions, see the [devcontainer documentation](.devcontainer/README.md) that gets distributed with each release.
+
+---
+
+## For Repository Maintainers
+
+The following documentation is for maintaining this build and publish repository.
+
+This is a **build and publish repository** that also dogfoods its own output. It maintains:
 
 1. **Dockerfile** - The build recipe for the `ghcr.io/angloc/protodev` container image
-2. **template/** - The distributable devcontainer configuration that users download
+2. **.devcontainer/** - The definitive devcontainer configuration, used both by this repo and distributed to users
 
 ## Architecture
 
 ```
 /workspace
 ├── Dockerfile                    # Build recipe (source of truth for the image)
-├── .devcontainer/                # Minimal environment for maintaining THIS repo
-│   ├── devcontainer.json         # Uses base image + GitHub CLI
-│   └── postCreateCommand.sh      # Minimal setup
-├── template/                     # What users download as devcontainer.zip
-│   ├── .devcontainer/            # References the published image
-│   │   ├── devcontainer.json     # Uses ghcr.io/angloc/protodev:latest
-│   │   ├── docker-compose.yml    # Alternative Docker Compose setup
-│   │   ├── postCreateCommand.sh  # User environment setup
-│   │   └── postStartCommand.sh   # Background services startup
-│   ├── Makefile                  # Convenience commands
-│   └── .protodev/                # User documentation
-│       └── README.md
+├── .devcontainer/                # Definitive devcontainer config (also shipped in releases)
+│   ├── devcontainer.json         # Uses ghcr.io/angloc/protodev:latest
+│   ├── postStartCommand.sh       # Background services startup (Docker socket, DBus, Xpra)
+│   ├── start-shell.sh            # Standalone: start a dev container shell
+│   ├── start-lab.sh              # Standalone: start a JupyterLab container (background)
+│   ├── stop-lab.sh               # Standalone: stop the JupyterLab container
+│   ├── README.md                 # User-facing documentation
+│   ├── AGENTS.md                 # AI agent instructions (user-facing)
+│   └── .clinerules               # Cline AI rules (user-facing)
+├── tests/                        # Container tests
+│   ├── conftest.py               # Test fixtures (supports in-container and CI modes)
+│   ├── test_startup.py
+│   ├── test_tools.py
+│   ├── test_services.py
+│   └── test_docker_in_docker.py
 ├── .github/workflows/
-│   └── docker-publish.yml        # Builds image, creates devcontainer.zip
-└── README.md                     # This file (maintainer documentation)
+│   ├── docker-publish.yml        # Builds image, creates devcontainer.zip
+│   └── container-tests.yml      # Runs tests in CI
+├── Makefile                      # Maintainer commands
+└── README.md                     # This file
 ```
 
 ## Build Process
@@ -43,23 +64,54 @@ The workflow triggers on:
 The workflow:
 1. Builds the Docker image from `./Dockerfile`
 2. Pushes to `ghcr.io/angloc/protodev` with appropriate tags
-3. Creates `devcontainer.zip` from the `template/` folder
+3. Creates `devcontainer.zip` from the `.devcontainer/` folder
 4. Attaches the zip to GitHub Releases (for version tags)
 
 ### Local Build
 
-To build the image locally for testing:
-
 ```bash
-docker build -t protodev-test .
+# Build for local testing (test tag)
+make build
+
+# Build tagged as the published image (dogfood testing)
+make dogfood
 ```
 
-To test the template:
+## Dogfood Workflow
+
+This repo uses its own output — the `.devcontainer/` config points at `ghcr.io/angloc/protodev:latest`, which can be built and tagged locally with `make dogfood`.
+
+### Testing the Container
 
 ```bash
-cd template
-docker compose -f .devcontainer/docker-compose.yml up -d
-docker compose -f .devcontainer/docker-compose.yml exec dev bash
+# Step 1: Build and tag locally
+make dogfood
+
+# Step 2a: Rebuild devcontainer in VS Code
+#   Ctrl+Shift+P → "Dev Containers: Rebuild Container"
+#   Then inside the container:
+make test
+
+# Step 2b: Or run standalone and shell in
+docker run -it --rm --privileged --shm-size=2gb \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(pwd):/workspace \
+  -p 8080:8080 -p 14500:14500 -p 8888:8888 \
+  -e DISPLAY=:100 --workdir /workspace \
+  ghcr.io/angloc/protodev:latest bash
+# Then inside the container:
+make test
+```
+
+`make test` runs pytest directly in the current context — no container orchestration needed, because you're already inside the container being tested.
+
+### CI Workflow (outside container)
+
+For CI or testing without being inside the container:
+
+```bash
+make build    # Build test-tagged image
+make pytest   # Start fresh container, run tests, tear down
 ```
 
 ## Versioning
@@ -86,16 +138,15 @@ git push origin v1.0.0
 ### Updating the Container Image
 
 1. Edit `Dockerfile` to add/remove tools
-2. Test locally: `docker build -t protodev-test .`
+2. Test locally: `make dogfood` then `make test` (inside container)
 3. Commit and push to main (or create PR)
 4. GitHub Actions will build and push the new image
 
-### Updating the Template
+### Updating the Devcontainer Config
 
-1. Edit files in `template/.devcontainer/`
-2. Ensure `devcontainer.json` references the correct image version
-3. Test with a sample project
-4. Commit and push
+Edit files in `.devcontainer/`. These are both:
+- Used by this repo when developing in the container
+- Packaged into `devcontainer.zip` for users to download
 
 ### Adding New Tools
 
@@ -127,39 +178,23 @@ docker pull ghcr.io/angloc/protodev:latest
 
 ## Container Runtime
 
-The development container uses **Podman** instead of Docker:
+The development container uses **Docker** for container management:
 
-- **Rootless by default** - More secure, no privileged mode required
-- **Daemonless** - No background service needed
-- **Docker-compatible CLI** - The `podman-docker` package provides a `docker` alias
+- **Docker CE** - Industry-standard container runtime
+- **Docker Compose** - Multi-container orchestration
+- **Docker socket sharing** - Containers use the host's Docker daemon
 
-Users can run `docker` commands as usual; they're transparently handled by Podman.
+## Available Make Targets
 
-## Development Environment for This Repo
-
-This repository has a minimal `.devcontainer` for maintainers. It provides:
-- GitHub CLI (`gh`) for release management
-- Git for version control
-- Container runtime (Podman or Docker) for local testing
-
-### Using the Dev Container (Recommended)
-
-To use the dev container:
-1. Open in VS Code
-2. When prompted, reopen in container
-3. Podman and all necessary tools will be automatically available
-
-### Working Without the Dev Container
-
-If you prefer not to use the dev container, ensure you have the following prerequisites installed on your host machine:
-
-| Tool | Purpose | Installation |
-|------|---------|--------------|
-| **Docker or Podman** | Building and testing container images | [docker.com](https://docs.docker.com/get-docker/) or [podman.io](https://podman.io/) |
-| **GitHub CLI (`gh`)** | Release management and repository operations | [cli.github.com](https://cli.github.com/) |
-| **Git** | Version control | [git-scm.com](https://git-scm.com/) |
-
-**Note:** The build and publish process runs in GitHub Actions, so these tools are only needed for local testing and development.
+| Target | Description |
+|--------|-------------|
+| `make dogfood` | Build image as `ghcr.io/angloc/protodev:latest` for dogfood testing |
+| `make test` | Run tests in current context (inside container) |
+| `make build` | Build image as `protodev-test` (local test tag) |
+| `make rebuild` | Force rebuild without cache |
+| `make shell` | Open interactive shell in locally-built test image |
+| `make pytest` | Run tests by starting a fresh container (CI workflow) |
+| `make clean` | Remove local test image |
 
 ## Contributing
 

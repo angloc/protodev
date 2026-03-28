@@ -1,21 +1,39 @@
 #!/bin/bash
 #
-# postStartCommand.sh - Runtime services startup for DevContainer mode
+# postStartCommand.sh - Runtime setup for development container
 #
-# This script runs after the container is created and VS Code connects.
-# It starts background services that are needed in DevContainer mode.
+# This script runs when the container starts. It handles all runtime tasks
+# that cannot be baked into the image:
+# - Docker socket permissions (if mounted from host)
+# - DBus session bus (required for Chrome input handling)
+# - Xpra HTML5 server (for GUI applications)
 #
-# Note: Podman is daemonless and doesn't require a background service.
+# Git configuration is already baked into the image (see Dockerfile).
+#
+# This script is used by both:
+# - VS Code DevContainer mode (via devcontainer.json postStartCommand)
+# - Docker Compose mode (via docker-compose.yml entrypoint)
 
 set -e
 
-echo "🚀 Starting background services..."
+echo "🚀 Starting development container services..."
 
 # ============================================
-# Start DBus session bus (required by Chrome for input handling)
+# Docker Socket Permissions
+# ============================================
+# The Docker daemon socket is created at runtime on the host and must be
+# made accessible to the vscode user. This cannot be done at image-build time.
+if [ -e /var/run/docker.sock ]; then
+    sudo chown root:docker /var/run/docker.sock 2>/dev/null || true
+    sudo chmod 660 /var/run/docker.sock 2>/dev/null || true
+    echo "✅ Docker socket configured"
+fi
+
+# ============================================
+# DBus Session Bus
 # ============================================
 # Chrome makes synchronous calls to the session bus; without it each call
-# times out (~2s), causing severe keystroke lag.  The system bus
+# times out (~2s), causing severe keystroke lag. The system bus
 # (/run/dbus/system_bus_socket) requires systemd and cannot be started
 # here — its absence produces harmless cosmetic errors in Chrome's log.
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
@@ -31,7 +49,7 @@ else
 fi
 
 # ============================================
-# Start Xpra (GUI application streaming)
+# Xpra (GUI Application Streaming)
 # ============================================
 if ! command -v xpra &>/dev/null; then
     echo "⚠️  xpra is not installed — skipping GUI streaming startup"
@@ -59,13 +77,23 @@ else
 fi
 
 echo ""
-echo "✅ Background services started!"
+echo "✅ Development environment ready!"
 echo ""
-echo "Services available:"
-echo "  • Podman (docker)   - daemonless container runtime (use 'docker' or 'podman')"
-echo "  • Xpra HTML5        - http://localhost:14500"
+echo "Available tools:"
+echo "  • Python 3.12 (uv)    • Node.js 22 (npm)"
+echo "  • Docker              • GitHub CLI (gh)"
+echo "  • act (GitHub Actions) • ripgrep (rg)"
+echo "  • fzf                 • yq / jq"
+echo "  • Google Chrome       • Xpra (GUI apps)"
+echo "  • JupyterLab          • DuckDB"
 echo ""
-echo "To start a GUI application with Xpra:"
-echo "  chrome-xpra &"
-echo "  Then connect via http://localhost:14500"
+echo "Functional Testing:"
+echo "  • Playwright (browser automation, API testing)"
+echo "  • HTTPie (API exploration)"
+echo "  • pytest (test runner)"
+echo ""
+echo "Ports:"
+echo "  • 8080  - Application server"
+echo "  • 14500 - Xpra HTML5 web interface"
+echo "  • 8888  - JupyterLab"
 echo ""

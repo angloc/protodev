@@ -2,9 +2,9 @@
 
 This project uses the protodev Docker development environment.
 
-**Read .protodev/README.md to understand the development environment and follow its directions.**
+**Read .devcontainer/README.md to understand the development environment and follow its directions.**
 
-The .protodev/README.md contains essential information about:
+The .devcontainer/README.md contains essential information about:
 - Quick start guide for using the dev container
 - Available tools and languages (Python, Node.js, Docker)
 - Workflow options (VS Code Dev Containers, Docker Compose, Makefile)
@@ -14,4 +14,4 @@ The .protodev/README.md contains essential information about:
 
 ## Incorporating These Instructions
 
-To ensure AI assistants working on this project can optimally utilize the development facilities, incorporate these rules into your project's `.clinerules` file. If you don't have a `.clinerules` file, you can rename this file to `.clinerules` and place it in your project root.
+To ensure AI assistants working on this project can optimally utilize the development facilities, incorporate these rules into your project's `.clinerules` file. If you don't have a `.clinerules` file, copy this file to your project root as `.clinerules`.
